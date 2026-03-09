@@ -1,0 +1,129 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CUSTOMER
+  ADMIN
+}
+
+enum Category {
+  METAL_PLATE
+  PHONE_CASE
+}
+
+enum Size {
+  A3
+  A4
+}
+
+enum Finish {
+  MATTE
+  GLOSS
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PRINTING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+model User {
+  id           String     @id @default(cuid())
+  email        String     @unique
+  name         String?
+  passwordHash String?
+  phone        String?
+  role         Role       @default(CUSTOMER)
+  orders       Order[]
+  designs      Design[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model Product {
+  id          String           @id @default(cuid())
+  slug        String           @unique
+  name        String
+  description String?
+  category    Category
+  basePrice   Float
+  images      String[]
+  modelUrl    String?
+  templateUrl String?
+  active      Boolean          @default(true)
+  variants    ProductVariant[]
+  orderItems  OrderItem[]
+  createdAt   DateTime         @default(now())
+}
+
+model ProductVariant {
+  id            String      @id @default(cuid())
+  productId     String
+  product       Product     @relation(fields: [productId], references: [id])
+  size          Size?
+  finish        Finish
+  phoneModel    String?
+  priceModifier Float       @default(0)
+  sku           String      @unique
+  active        Boolean     @default(true)
+  orderItems    OrderItem[]
+}
+
+model Design {
+  id          String      @id @default(cuid())
+  userId      String?
+  user        User?       @relation(fields: [userId], references: [id])
+  name        String      @default("Untitled")
+  canvasJson  Json?
+  previewUrl  String?
+  printFileUrl String?
+  productId   String
+  variantId   String?
+  isExample   Boolean     @default(false)
+  orderItems  OrderItem[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  orderNumber     String      @unique
+  userId          String?
+  user            User?       @relation(fields: [userId], references: [id])
+  status          OrderStatus @default(PENDING)
+  subtotal        Float
+  shippingCost    Float       @default(0)
+  total           Float
+  customerName    String
+  customerEmail   String?
+  customerPhone   String
+  shippingAddress Json
+  notes           String?
+  items           OrderItem[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+}
+
+model OrderItem {
+  id         String          @id @default(cuid())
+  orderId    String
+  order      Order           @relation(fields: [orderId], references: [id])
+  productId  String
+  product    Product         @relation(fields: [productId], references: [id])
+  variantId  String
+  variant    ProductVariant  @relation(fields: [variantId], references: [id])
+  designId   String
+  design     Design          @relation(fields: [designId], references: [id])
+  quantity   Int
+  unitPrice  Float
+  totalPrice Float
+}
