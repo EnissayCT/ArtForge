@@ -1,0 +1,83 @@
+[
+  {
+    "id": "salon",
+    "name": "Salon",
+    "image": "/scenes/salon.jpg",
+    "w": 2000,
+    "h": 1333,
+    "anchor": {
+      "x": 0.5,
+      "y": 0.3
+    },
+    "cmPerWidth": 435,
+    "maxHeightCm": 95,
+    "source": "https://www.pexels.com/photo/contemporary-living-room-interior-with-sofa-against-tables-6980714/",
+    "license": "Pexels License",
+    "credit": "Max Vakhtbovych / Pexels"
+  },
+  {
+    "id": "bureau",
+    "name": "Bureau",
+    "image": "/scenes/bureau.jpg",
+    "w": 2000,
+    "h": 1335,
+    "anchor": {
+      "x": 0.24,
+      "y": 0.41
+    },
+    "cmPerWidth": 185,
+    "maxHeightCm": 85,
+    "source": "https://unsplash.com/photos/white-desk-lamp-beside-green-plant-BlIhVfXbi9s",
+    "license": "Unsplash License",
+    "credit": "Samantha Gades / Unsplash"
+  },
+  {
+    "id": "chambre",
+    "name": "Chambre",
+    "image": "/scenes/chambre.jpg",
+    "w": 2000,
+    "h": 1365,
+    "anchor": {
+      "x": 0.65,
+      "y": 0.38
+    },
+    "cmPerWidth": 435,
+    "maxHeightCm": 95,
+    "source": "https://www.shopify.com/stock-photos/photos/photo-of-a-bedroom-with-black-and-gold-design",
+    "license": "Burst Some Rights Reserved License (free for commercial use)",
+    "credit": "Farah / Burst (Shopify)",
+    "tilt": -16
+  },
+  {
+    "id": "entree",
+    "name": "Entrée",
+    "image": "/scenes/entree.jpg",
+    "w": 2000,
+    "h": 1333,
+    "anchor": {
+      "x": 0.32,
+      "y": 0.21
+    },
+    "cmPerWidth": 290,
+    "maxHeightCm": 70,
+    "source": "https://kaboompics.com/photo/25390/black-marble-console-tables-styled-with-books-ceramic-vases-and-sculptural-hand-decor",
+    "license": "Kaboompics License",
+    "credit": "Kaboompics"
+  },
+  {
+    "id": "cafe",
+    "name": "Café",
+    "image": "/scenes/cafe.jpg",
+    "w": 2000,
+    "h": 1333,
+    "anchor": {
+      "x": 0.45,
+      "y": 0.24
+    },
+    "cmPerWidth": 185,
+    "maxHeightCm": 55,
+    "source": "https://www.shopify.com/stock-photos/photos/cafe-chairs-and-brick-wall",
+    "license": "Burst Some Rights Reserved License (free for commercial use)",
+    "credit": "Sarah Pflug / Burst (Shopify)"
+  }
+]

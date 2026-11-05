@@ -1,188 +1,162 @@
-"use client";
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { adminAllowed } from "@/lib/admin";
+import { readAll } from "@/lib/store";
+import { formatDH, getSize } from "@/lib/pricing";
+import { getPhone } from "@/lib/phones";
+import { getArtwork } from "@/lib/catalog";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import {
-  Package,
-  TrendingUp,
-  ShoppingBag,
-  DollarSign,
-  ArrowUpRight,
-} from "lucide-react";
-import { formatPrice } from "@/lib/pricing";
+export const metadata: Metadata = { title: "Admin", robots: { index: false, follow: false } };
+export const dynamic = "force-dynamic";
 
+interface OrderItem {
+  kind: "plate" | "case";
+  title: string;
+  artSlug?: string;
+  designId?: string;
+  size?: string;
+  finish?: string;
+  frame?: string;
+  phone?: string;
+  caseType?: string;
+  qty: number;
+  unitPrice: number;
+}
 interface Order {
-  orderId: string;
+  number: string;
   status: string;
-  customer: { fullName: string; city: string };
-  total: number;
   createdAt: string;
-  items: { productName: string; quantity: number }[];
+  customer: { name: string; phone: string; city: string; otherCity?: string; address: string; email?: string; notes?: string };
+  items: OrderItem[];
+  promo?: string;
+  totals: { total: number; subtotal: number; discount: number; promo: number; shipping: number };
+}
+interface Lead {
+  contact: string;
+  type: string;
+  source: string;
+  at: string;
 }
 
-export default function AdminDashboard() {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
+const fmt = new Intl.DateTimeFormat("fr-FR", { dateStyle: "short", timeStyle: "short" });
 
-  useEffect(() => {
-    fetch("/api/orders")
-      .then((r) => r.json())
-      .then((data) => {
-        setOrders(data.orders || []);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
+export default async function AdminPage({ searchParams }: { searchParams: Promise<{ key?: string }> }) {
+  const { key } = await searchParams;
+  if (!adminAllowed(key)) notFound();
+  const orders = await readAll<Order>("orders.json");
+  const leads = await readAll<Lead>("leads.json");
+  const revenue = orders.reduce((s, o) => s + o.totals.total, 0);
+  const items = orders.flatMap((o) => o.items);
+  const custom = items.filter((i) => i.designId).length;
+  const k = key ? `?key=${encodeURIComponent(key)}` : "";
 
-  const totalRevenue = orders.reduce((sum, o) => sum + o.total, 0);
-  const pendingOrders = orders.filter((o) => o.status === "PENDING").length;
-  const totalItems = orders.reduce(
-    (sum, o) => sum + o.items.reduce((s, i) => s + i.quantity, 0),
-    0
-  );
-
-  const stats = [
-    {
-      label: "Commandes",
-      value: orders.length.toString(),
-      icon: Package,
-      color: "text-blue-500",
-      bg: "bg-blue-500/10",
-    },
-    {
-      label: "Revenus",
-      value: formatPrice(totalRevenue),
-      icon: DollarSign,
-      color: "text-green-500",
-      bg: "bg-green-500/10",
-    },
-    {
-      label: "En attente",
-      value: pendingOrders.toString(),
-      icon: ShoppingBag,
-      color: "text-amber-500",
-      bg: "bg-amber-500/10",
-    },
-    {
-      label: "Articles vendus",
-      value: totalItems.toString(),
-      icon: TrendingUp,
-      color: "text-accent",
-      bg: "bg-accent/10",
-    },
-  ];
+  const bySize = new Map<string, number>();
+  items.forEach((i) => {
+    const label = i.kind === "plate" ? `Plaque ${i.size}` : "Coque";
+    bySize.set(label, (bySize.get(label) ?? 0) + i.qty);
+  });
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Tableau de bord</h1>
-        <p className="text-muted-foreground text-sm">
-          Vue d&apos;ensemble de votre boutique ArtForge
+    <div className="mx-auto max-w-[1440px] px-4 pb-24 pt-10 sm:px-8">
+      <p className="label text-stone">Tableau de bord</p>
+      <h1 className="display mt-3 text-[56px]">Validation du marché</h1>
+
+      <dl className="mt-8 grid grid-cols-2 gap-px border border-ink/12 bg-ink/12 lg:grid-cols-5">
+        {[
+          ["Commandes", orders.length],
+          ["Chiffre d'affaires", formatDH(revenue)],
+          ["Panier moyen", orders.length ? formatDH(revenue / orders.length) : "—"],
+          ["Créations perso.", `${custom} / ${items.length} articles`],
+          ["Inscrits club", leads.length],
+        ].map(([t, v]) => (
+          <div key={t as string} className="bg-paper p-5">
+            <dt className="label text-stone">{t}</dt>
+            <dd className="mt-2 text-[26px] font-semibold tabular-nums">{v}</dd>
+          </div>
+        ))}
+      </dl>
+      {bySize.size > 0 && (
+        <p className="mt-4 text-[13px] text-stone">
+          Répartition : {[...bySize.entries()].map(([l, n]) => `${l} × ${n}`).join(" · ")}
         </p>
-      </div>
+      )}
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((stat) => {
-          const Icon = stat.icon;
-          return (
-            <div
-              key={stat.label}
-              className="border border-border rounded-xl p-4 bg-card"
-            >
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-muted-foreground">
-                  {stat.label}
-                </span>
-                <div className={`p-2 rounded-lg ${stat.bg}`}>
-                  <Icon className={`h-4 w-4 ${stat.color}`} />
-                </div>
-              </div>
-              <p className="text-2xl font-bold">{loading ? "..." : stat.value}</p>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Recent Orders */}
-      <div className="border border-border rounded-xl bg-card">
-        <div className="flex items-center justify-between p-4 border-b border-border">
-          <h2 className="font-bold">Commandes récentes</h2>
-          <Link
-            href="/admin/orders"
-            className="text-sm text-accent hover:underline flex items-center gap-1"
-          >
-            Voir tout <ArrowUpRight className="h-3.5 w-3.5" />
-          </Link>
-        </div>
-
-        {loading ? (
-          <div className="p-8 text-center text-muted-foreground">
-            Chargement...
-          </div>
-        ) : orders.length === 0 ? (
-          <div className="p-8 text-center text-muted-foreground">
-            Aucune commande pour le moment.
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-muted-foreground border-b border-border">
-                  <th className="px-4 py-3 font-medium">Réf</th>
-                  <th className="px-4 py-3 font-medium">Client</th>
-                  <th className="px-4 py-3 font-medium">Ville</th>
-                  <th className="px-4 py-3 font-medium">Total</th>
-                  <th className="px-4 py-3 font-medium">Statut</th>
+      <h2 className="display-semi mt-14 text-[30px]">Commandes</h2>
+      {orders.length === 0 ? (
+        <p className="mt-4 text-stone">Aucune commande pour l&apos;instant. Elles s&apos;enregistrent dans data/orders.json.</p>
+      ) : (
+        <div className="mt-4 overflow-x-auto border border-ink/12">
+          <table className="w-full min-w-[980px] text-left text-[13px]">
+            <thead className="bg-paper-2">
+              <tr className="label text-stone">
+                <th className="p-3 font-normal">N°</th>
+                <th className="p-3 font-normal">Date</th>
+                <th className="p-3 font-normal">Client</th>
+                <th className="p-3 font-normal">Livraison</th>
+                <th className="p-3 font-normal">Articles</th>
+                <th className="p-3 text-right font-normal">Total</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-ink/10">
+              {orders.map((o) => (
+                <tr key={o.number} className="align-top">
+                  <td className="p-3 font-semibold">{o.number}</td>
+                  <td className="p-3 text-stone">{fmt.format(new Date(o.createdAt))}</td>
+                  <td className="p-3">
+                    <p className="font-semibold">{o.customer.name}</p>
+                    <a href={`tel:${o.customer.phone}`} className="underline">{o.customer.phone}</a>
+                    {o.customer.email && <p className="text-stone">{o.customer.email}</p>}
+                  </td>
+                  <td className="p-3">
+                    <p>{o.customer.city === "Autre ville" ? o.customer.otherCity : o.customer.city}</p>
+                    <p className="text-stone">{o.customer.address}</p>
+                    {o.customer.notes && <p className="mt-1 italic text-stone">« {o.customer.notes} »</p>}
+                  </td>
+                  <td className="p-3">
+                    <ul className="space-y-1.5">
+                      {o.items.map((i, n) => (
+                        <li key={n}>
+                          {i.qty}× {i.artSlug ? getArtwork(i.artSlug)?.title ?? i.title : i.title} —{" "}
+                          <span className="text-stone">
+                            {i.kind === "plate"
+                              ? `${i.size} ${getSize(i.size as "M").w}×${getSize(i.size as "M").h}, ${i.finish}, cadre ${i.frame}`
+                              : `${getPhone(i.phone ?? "").name}, ${i.caseType}`}
+                          </span>
+                          {i.designId && (
+                            <a href={`/api/admin/file/${i.designId}${k}`} target="_blank" rel="noreferrer" className="label ml-2 text-ember-deep underline">
+                              fichier
+                            </a>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </td>
+                  <td className="p-3 text-right font-semibold tabular-nums">
+                    {formatDH(o.totals.total)}
+                    {o.promo && <p className="label font-normal text-stone">{o.promo}</p>}
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {orders.slice(0, 10).map((order) => (
-                  <tr
-                    key={order.orderId}
-                    className="border-b border-border last:border-0 hover:bg-secondary/30"
-                  >
-                    <td className="px-4 py-3 font-mono text-xs">
-                      {order.orderId}
-                    </td>
-                    <td className="px-4 py-3 font-medium">
-                      {order.customer.fullName}
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {order.customer.city}
-                    </td>
-                    <td className="px-4 py-3 font-medium">
-                      {formatPrice(order.total)}
-                    </td>
-                    <td className="px-4 py-3">
-                      <StatusBadge status={order.status} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <h2 className="display-semi mt-14 text-[30px]">Club (leads)</h2>
+      {leads.length === 0 ? (
+        <p className="mt-4 text-stone">Aucune inscription pour l&apos;instant.</p>
+      ) : (
+        <ul className="mt-4 divide-y divide-ink/10 border-y border-ink/10 text-[14px]">
+          {leads.map((l, i) => (
+            <li key={i} className="flex justify-between gap-4 py-2.5">
+              <span>{l.contact}</span>
+              <span className="text-stone">
+                {l.type} · {l.source} · {fmt.format(new Date(l.at))}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
-  );
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const config: Record<string, { label: string; classes: string }> = {
-    PENDING: { label: "En attente", classes: "bg-amber-500/10 text-amber-600" },
-    CONFIRMED: { label: "Confirmé", classes: "bg-blue-500/10 text-blue-600" },
-    PROCESSING: { label: "En cours", classes: "bg-purple-500/10 text-purple-600" },
-    SHIPPED: { label: "Expédié", classes: "bg-indigo-500/10 text-indigo-600" },
-    DELIVERED: { label: "Livré", classes: "bg-green-500/10 text-green-600" },
-    CANCELLED: { label: "Annulé", classes: "bg-red-500/10 text-red-600" },
-  };
-
-  const c = config[status] || { label: status, classes: "bg-secondary text-foreground" };
-
-  return (
-    <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${c.classes}`}>
-      {c.label}
-    </span>
   );
 }

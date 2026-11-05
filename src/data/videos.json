@@ -1,0 +1,50 @@
+[
+  {
+    "id": "hero",
+    "src": "/videos/hero.mp4",
+    "poster": "/videos/hero.jpg",
+    "w": 1280,
+    "h": 720,
+    "duration": 6.4,
+    "theme": "hero",
+    "description": "Slow sideways camera move across a warm, lamp-lit modern living room: grey sectional sofa, wooden side table, framed art on a cream wall.",
+    "source": "https://mixkit.co/free-stock-video/minimalist-room-with-gray-sofa-3110/",
+    "license": "Mixkit Free License"
+  },
+  {
+    "id": "craft",
+    "src": "/videos/craft.mp4",
+    "poster": "/videos/craft.jpg",
+    "w": 1280,
+    "h": 720,
+    "duration": 9.8,
+    "theme": "craft",
+    "description": "Close-up of an artist's hand working a fine brush through purple and plum watercolour on textured paper, warm light.",
+    "source": "https://mixkit.co/free-stock-video/hand-of-an-artist-with-a-brush-when-painting-5197/",
+    "license": "Mixkit Free License"
+  },
+  {
+    "id": "lifestyle",
+    "src": "/videos/lifestyle.mp4",
+    "poster": "/videos/lifestyle.jpg",
+    "w": 1280,
+    "h": 720,
+    "duration": 9.0,
+    "theme": "lifestyle",
+    "description": "Wide shot of a bright loft studio with a white brick moodboard wall and easel; a man relaxes at his desk with his feet up while the camera slowly tracks past.",
+    "source": "https://mixkit.co/free-stock-video/coffee-break-in-a-creative-studio-14622/",
+    "license": "Mixkit Free License"
+  },
+  {
+    "id": "texture",
+    "src": "/videos/texture.mp4",
+    "poster": "/videos/texture.jpg",
+    "w": 1280,
+    "h": 720,
+    "duration": 10.0,
+    "theme": "texture",
+    "description": "Slow-motion clouds of pink and yellow ink blooming in water against a black background; abstract and moody.",
+    "source": "https://mixkit.co/free-stock-video/exploding-ink-underwater-105/",
+    "license": "Mixkit Free License"
+  }
+]

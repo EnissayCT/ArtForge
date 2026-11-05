@@ -1,41 +1,54 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Archivo, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
-import { Navbar } from "@/components/layout/Navbar";
+import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { CartDrawer } from "@/components/cart/CartDrawer";
+import { QuickView3D } from "@/components/viewer/QuickView3D";
+import { SITE } from "@/lib/site";
 
-const inter = Inter({
+const archivo = Archivo({
+  subsets: ["latin", "latin-ext"],
+  axes: ["wdth"],
+  variable: "--font-archivo",
+  display: "swap",
+});
+
+const plexMono = IBM_Plex_Mono({
   subsets: ["latin"],
-  variable: "--font-inter",
+  weight: ["400", "500"],
+  variable: "--font-plex-mono",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE.url),
   title: {
-    default: "ArtForge Studio — Impression UV sur mesure",
-    template: "%s | ArtForge Studio",
+    default: "ArtForge — Affiches en métal imprimées au Maroc",
+    template: "%s — ArtForge",
   },
-  description:
-    "Créez vos plaques métal et coques de téléphone personnalisées avec impression UV. Livraison partout au Maroc, paiement à la livraison.",
-  keywords: [
-    "impression UV",
-    "plaque métal personnalisée",
-    "coque téléphone personnalisée",
-    "print on demand Maroc",
-    "ArtForge",
-  ],
+  description: SITE.description,
+  openGraph: {
+    title: "ArtForge — Affiches en métal imprimées au Maroc",
+    description: SITE.description,
+    locale: "fr_MA",
+    type: "website",
+  },
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export const viewport: Viewport = {
+  themeColor: "#131211",
+};
+
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="fr" className={inter.variable}>
-      <body className="antialiased min-h-screen flex flex-col">
-        <Navbar />
+    <html lang="fr" className={`${archivo.variable} ${plexMono.variable}`}>
+      <body className="min-h-screen flex flex-col">
+        <Header />
         <main className="flex-1">{children}</main>
         <Footer />
+        <CartDrawer />
+        <QuickView3D />
       </body>
     </html>
   );

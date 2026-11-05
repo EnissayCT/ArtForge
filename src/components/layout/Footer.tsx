@@ -1,103 +1,108 @@
 import Link from "next/link";
-import { Flame, Instagram, Facebook, MessageCircle } from "lucide-react";
-import { siteConfig } from "@/config/site";
+import { Mark } from "@/components/brand/Logo";
+import { COLLECTIONS } from "@/lib/catalog";
+import { SITE } from "@/lib/site";
+import { NewsletterForm } from "./NewsletterForm";
+
+const COLUMNS = [
+  {
+    title: "Boutique",
+    links: [
+      { label: "Toutes les œuvres", href: "/boutique" },
+      { label: "Coques de téléphone", href: "/coques" },
+      { label: "Créer la vôtre", href: "/creer" },
+      { label: "Favoris", href: "/favoris" },
+    ],
+  },
+  {
+    title: "Aide",
+    links: [
+      { label: "Livraison & paiement", href: "/aide#livraison" },
+      { label: "Retours & échanges", href: "/aide#retours" },
+      { label: "Fixation aimantée", href: "/aide#fixation" },
+      { label: "Guide des tailles", href: "/aide#tailles" },
+      { label: "Questions fréquentes", href: "/aide" },
+    ],
+  },
+  {
+    title: "ArtForge",
+    links: [
+      { label: "L'atelier", href: "/atelier" },
+      { label: "Commandes pro & cadeaux", href: "/atelier#pro" },
+      { label: "Instagram", href: SITE.instagram },
+      { label: "WhatsApp", href: `https://wa.me/${SITE.whatsapp}` },
+    ],
+  },
+];
 
 export function Footer() {
   return (
-    <footer className="border-t border-border bg-secondary/50">
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
-          {/* Brand */}
-          <div className="col-span-1 sm:col-span-2 lg:col-span-1">
-            <Link href="/" className="flex items-center gap-2 mb-3">
-              <Flame className="h-6 w-6 text-accent" />
-              <span className="text-lg font-bold">
-                Art<span className="text-accent">Forge</span>
-              </span>
-            </Link>
-            <p className="text-sm text-muted-foreground max-w-xs">
-              {siteConfig.footer.tagline}
+    <footer className="bg-ink text-paper">
+      <div className="mx-auto max-w-[1440px] px-4 pt-20 sm:px-8">
+        <div className="grid gap-14 lg:grid-cols-12">
+          <div className="lg:col-span-5">
+            <p className="label text-paper/50">Le club ArtForge</p>
+            <h2 className="display mt-4 text-[54px] sm:text-[72px]">
+              Les nouvelles séries,
+              <br />
+              <span className="text-ember">avant tout le monde.</span>
+            </h2>
+            <p className="mt-5 max-w-md text-[15px] leading-relaxed text-paper/65">
+              Une lettre par mois : nouvelles collections, éditions limitées et −10 % sur votre première commande.
             </p>
+            <NewsletterForm />
           </div>
-
-          {/* Navigation */}
-          <div>
-            <h3 className="text-sm font-semibold mb-3">Navigation</h3>
-            <ul className="space-y-2">
-              {siteConfig.navigation.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Info */}
-          <div>
-            <h3 className="text-sm font-semibold mb-3">Informations</h3>
-            <ul className="space-y-2">
-              {siteConfig.footer.links.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Social */}
-          <div>
-            <h3 className="text-sm font-semibold mb-3">Suivez-nous</h3>
-            <div className="flex gap-3">
-              <a
-                href={siteConfig.footer.social.instagram}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-2 rounded-lg bg-secondary hover:bg-accent hover:text-accent-foreground transition-colors"
-              >
-                <Instagram className="h-5 w-5" />
-              </a>
-              <a
-                href={siteConfig.footer.social.facebook}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-2 rounded-lg bg-secondary hover:bg-accent hover:text-accent-foreground transition-colors"
-              >
-                <Facebook className="h-5 w-5" />
-              </a>
-              <a
-                href={siteConfig.footer.social.whatsapp}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-2 rounded-lg bg-secondary hover:bg-accent hover:text-accent-foreground transition-colors"
-              >
-                <MessageCircle className="h-5 w-5" />
-              </a>
-            </div>
-            <div className="mt-4">
-              <p className="text-sm text-muted-foreground">
-                Paiement à la livraison 💰
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Livraison partout au Maroc 🇲🇦
-              </p>
+          <div className="grid grid-cols-2 gap-10 sm:grid-cols-4 lg:col-span-7 lg:pl-10">
+            {COLUMNS.map((col) => (
+              <div key={col.title}>
+                <p className="label mb-5 text-paper/45">{col.title}</p>
+                <ul className="space-y-2.5">
+                  {col.links.map((l) => (
+                    <li key={l.label}>
+                      <Link href={l.href} className="link-u text-[14px] text-paper/80 hover:text-paper">
+                        {l.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+            <div>
+              <p className="label mb-5 text-paper/45">Collections</p>
+              <ul className="space-y-2.5">
+                {COLLECTIONS.slice(0, 6).map((c) => (
+                  <li key={c.slug}>
+                    <Link href={`/collections/${c.slug}`} className="link-u text-[14px] text-paper/80 hover:text-paper">
+                      {c.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
         </div>
 
-        <div className="mt-8 border-t border-border pt-6">
-          <p className="text-xs text-muted-foreground text-center">
-            © {new Date().getFullYear()} ArtForge Studio. Tous droits réservés.
-          </p>
+        <div className="mt-20 flex flex-wrap items-center gap-x-8 gap-y-3 border-t border-paper/10 py-6 text-[13px] text-paper/50">
+          <span className="label">Paiement à la livraison</span>
+          <span className="label">Livraison 24–72 h</span>
+          <span className="label">Retours 14 jours</span>
+          <span className="label">Imprimé au Maroc</span>
+        </div>
+      </div>
+      <div className="overflow-hidden border-t border-paper/10">
+        <div className="mx-auto flex max-w-[1440px] items-end justify-between gap-6 px-4 pb-6 pt-10 sm:px-8">
+          <div className="flex items-end gap-4 sm:gap-6">
+            <Mark className="h-[64px] w-auto text-paper sm:h-[118px]" />
+            <span className="display text-[76px] leading-[0.76] sm:text-[160px] lg:text-[210px]">ArtForge</span>
+          </div>
+          <div className="hidden pb-2 text-right text-[12px] text-paper/40 md:block">
+            <p>© {new Date().getFullYear()} ArtForge — {SITE.city}, Maroc</p>
+            <p className="mt-1">
+              <Link href="/aide#cgv" className="hover:text-paper">CGV</Link> ·{" "}
+              <Link href="/aide#confidentialite" className="hover:text-paper">Confidentialité</Link> ·{" "}
+              <Link href="/atelier#credits" className="hover:text-paper">Crédits</Link>
+            </p>
+          </div>
         </div>
       </div>
     </footer>

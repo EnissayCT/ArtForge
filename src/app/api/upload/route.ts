@@ -1,58 +1,25 @@
-import { NextRequest, NextResponse } from "next/server";
+import { randomUUID } from "crypto";
+import { NextResponse } from "next/server";
+import { saveUpload } from "@/lib/store";
 
-const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
-const ACCEPTED_TYPES = [
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/tiff",
-];
+const MAX = 40 * 1024 * 1024;
 
-export async function POST(request: NextRequest) {
+export async function POST(req: Request) {
   try {
-    const formData = await request.formData();
-    const file = formData.get("file") as File | null;
-
-    if (!file) {
-      return NextResponse.json(
-        { error: "Aucun fichier fourni" },
-        { status: 400 }
-      );
+    const form = await req.formData();
+    const file = form.get("file");
+    if (!(file instanceof Blob)) return NextResponse.json({ error: "Fichier manquant" }, { status: 400 });
+    if (file.size > MAX) return NextResponse.json({ error: "Fichier trop lourd" }, { status: 413 });
+    const buf = Buffer.from(await file.arrayBuffer());
+    // JPEG magic number — the studio always exports JPEG
+    if (!(buf[0] === 0xff && buf[1] === 0xd8)) {
+      return NextResponse.json({ error: "Format invalide" }, { status: 415 });
     }
-
-    if (!ACCEPTED_TYPES.includes(file.type)) {
-      return NextResponse.json(
-        { error: "Type de fichier non supporté. Utilisez JPG, PNG, WebP ou TIFF." },
-        { status: 400 }
-      );
-    }
-
-    if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json(
-        { error: "Fichier trop volumineux (max 50 MB)" },
-        { status: 400 }
-      );
-    }
-
-    // In production, upload to Cloudinary/Supabase Storage
-    // For now, return a data URL or acknowledge upload
-    const bytes = await file.arrayBuffer();
-    const base64 = Buffer.from(bytes).toString("base64");
-    const dataUrl = `data:${file.type};base64,${base64}`;
-
-    return NextResponse.json({
-      success: true,
-      fileName: file.name,
-      size: file.size,
-      type: file.type,
-      // For large files in production, return a hosted URL instead
-      url: dataUrl,
-    });
-  } catch (error) {
-    console.error("[Upload API Error]", error);
-    return NextResponse.json(
-      { error: "Erreur lors de l'upload" },
-      { status: 500 }
-    );
+    const id = randomUUID();
+    await saveUpload(id, buf);
+    return NextResponse.json({ id }, { status: 201 });
+  } catch (e) {
+    console.error("[upload]", e);
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
