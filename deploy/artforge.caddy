@@ -1,0 +1,32 @@
+# /etc/caddy/sites/artforge.caddy — ArtForge storefront.
+# Next.js on 127.0.0.1:3004 (unit artforge.service, files in /srv/artforge, data in /srv/artforge/data).
+# When the real domain is ready: add it next to the sslip host below, point its DNS A record at
+# this server, `caddy validate --config /etc/caddy/Caddyfile` then `systemctl reload caddy`.
+
+artforge.54-38-241-221.sslip.io {
+	import app_common
+
+	header Strict-Transport-Security "max-age=31536000"
+
+	# catalogue images, room photos and videos change rarely
+	@media path /art/* /scenes/* /videos/*
+	header @media Cache-Control "public, max-age=604800"
+
+	reverse_proxy 127.0.0.1:3004 {
+		# overwrite, never append: the app rate-limits on this address
+		header_up X-Forwarded-For {client_ip}
+		header_up X-Real-IP {client_ip}
+		transport http {
+			dial_timeout 5s
+			response_header_timeout 120s
+		}
+	}
+
+	log {
+		output file /var/log/caddy/artforge.log {
+			roll_size 20mb
+			roll_keep 7
+		}
+		format json
+	}
+}

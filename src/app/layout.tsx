@@ -1,11 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Archivo, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
-import { CartDrawer } from "@/components/cart/CartDrawer";
-import { QuickView3D } from "@/components/viewer/QuickView3D";
 import { SITE } from "@/lib/site";
+import { getCatalogData, getPublicSettings } from "@/lib/data";
+import { publicCatalog } from "@/lib/catalog";
+import { ShopProvider } from "@/components/providers/ShopProvider";
 
 const archivo = Archivo({
   subsets: ["latin", "latin-ext"],
@@ -21,34 +20,30 @@ const plexMono = IBM_Plex_Mono({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  metadataBase: new URL(SITE.url),
-  title: {
-    default: "ArtForge — Affiches en métal imprimées au Maroc",
-    template: "%s — ArtForge",
-  },
-  description: SITE.description,
-  openGraph: {
-    title: "ArtForge — Affiches en métal imprimées au Maroc",
+export async function generateMetadata(): Promise<Metadata> {
+  const { brand } = await getPublicSettings();
+  const title = `${brand.name} — ${brand.tagline}`;
+  return {
+    metadataBase: new URL(SITE.url),
+    title: { default: title, template: `%s — ${brand.name}` },
     description: SITE.description,
-    locale: "fr_MA",
-    type: "website",
-  },
-};
+    applicationName: brand.name,
+    openGraph: { title, description: SITE.description, locale: "fr_MA", type: "website", siteName: brand.name },
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: "#131211",
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const [settings, catalog] = await Promise.all([getPublicSettings(), getCatalogData()]);
   return (
     <html lang="fr" className={`${archivo.variable} ${plexMono.variable}`}>
-      <body className="min-h-screen flex flex-col">
-        <Header />
-        <main className="flex-1">{children}</main>
-        <Footer />
-        <CartDrawer />
-        <QuickView3D />
+      <body className="flex min-h-screen flex-col">
+        <ShopProvider settings={settings} catalog={publicCatalog(catalog)}>
+          {children}
+        </ShopProvider>
       </body>
     </html>
   );

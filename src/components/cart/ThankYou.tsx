@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useHydrated } from "@/lib/hooks";
 import { Check, MessageCircle } from "lucide-react";
 import { Mark } from "@/components/brand/Logo";
 import { formatDH } from "@/lib/pricing";
-import { SITE } from "@/lib/site";
+import { waLink } from "@/lib/site";
+import { track } from "@/lib/track";
+import { useShop } from "@/components/providers/ShopProvider";
 
 interface Last {
   number: string;
@@ -29,11 +31,24 @@ function readLast(number: string): Last | null {
 export function ThankYou({ number }: { number: string }) {
   const hydrated = useHydrated();
   const last = useMemo(() => (hydrated ? readLast(number) : null), [hydrated, number]);
+  const { brand } = useShop();
+
+  useEffect(() => {
+    if (!last) return;
+    try {
+      const key = `af-purchase-${last.number}`;
+      if (sessionStorage.getItem(key)) return;
+      sessionStorage.setItem(key, "1");
+      track("order", { value: last.total });
+    } catch {
+      /* ignore */
+    }
+  }, [last]);
 
   const text = last
-    ? `Bonjour ArtForge, je confirme ma commande ${last.number} (${formatDH(last.total)}, livraison à ${last.city}).\n\n${last.summary}`
-    : `Bonjour ArtForge, je confirme ma commande ${number}.`;
-  const wa = `https://wa.me/${SITE.whatsapp}?text=${encodeURIComponent(text)}`;
+    ? `Bonjour ${brand.name}, je confirme ma commande ${last.number} (${formatDH(last.total)}, livraison à ${last.city}).\n\n${last.summary}`
+    : `Bonjour ${brand.name}, je confirme ma commande ${number}.`;
+  const wa = waLink(brand.whatsapp, text);
 
   return (
     <div className="relative overflow-hidden bg-ink text-paper">

@@ -29,7 +29,7 @@
     "poster": "/videos/lifestyle.jpg",
     "w": 1280,
     "h": 720,
-    "duration": 9.0,
+    "duration": 9,
     "theme": "lifestyle",
     "description": "Wide shot of a bright loft studio with a white brick moodboard wall and easel; a man relaxes at his desk with his feet up while the camera slowly tracks past.",
     "source": "https://mixkit.co/free-stock-video/coffee-break-in-a-creative-studio-14622/",
@@ -41,10 +41,34 @@
     "poster": "/videos/texture.jpg",
     "w": 1280,
     "h": 720,
-    "duration": 10.0,
+    "duration": 10,
     "theme": "texture",
     "description": "Slow-motion clouds of pink and yellow ink blooming in water against a black background; abstract and moody.",
     "source": "https://mixkit.co/free-stock-video/exploding-ink-underwater-105/",
     "license": "Mixkit Free License"
+  },
+  {
+    "id": "plate-glint",
+    "src": "/videos/plate-glint.mp4",
+    "poster": "/videos/plate-glint.jpg",
+    "w": 1080,
+    "h": 1350,
+    "duration": 8,
+    "theme": "product",
+    "description": "A UV-printed metal plate tilting slowly in 3D on a dark backdrop while a band of light sweeps across it (seamless loop).",
+    "source": "Rendu maison (Remotion), voir ads/",
+    "license": "Création originale"
+  },
+  {
+    "id": "plate-snap",
+    "src": "/videos/plate-snap.mp4",
+    "poster": "/videos/plate-snap.jpg",
+    "w": 1080,
+    "h": 1350,
+    "duration": 7,
+    "theme": "magnet",
+    "description": "A metal plate snapping onto its adhesive steel sheet on a living-room wall, then lifting off (seamless loop).",
+    "source": "Rendu maison (Remotion), voir ads/",
+    "license": "Création originale"
   }
 ]

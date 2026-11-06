@@ -4,13 +4,14 @@ import { useEffect, useState } from "react";
 import type { Artwork } from "@/lib/catalog";
 import { isLandscape } from "@/lib/catalog";
 import { SCENES } from "@/lib/media";
-import { plateDims, type SizeId } from "@/lib/pricing";
+import { useShop } from "@/components/providers/ShopProvider";
 import { RoomPreview } from "@/components/room/RoomPreview";
 import { cn } from "@/lib/utils";
 
-const SIZES_CYCLE: SizeId[] = ["XL", "L", "XL", "L"];
-
 export function RoomTeaser({ arts }: { arts: Artwork[] }) {
+  const shop = useShop();
+  const big = [...shop.sizes].sort((a, b) => b.w * b.h - a.w * a.h).slice(0, 2).map((x) => x.id);
+  const SIZES_CYCLE = big.length ? [big[0], big[1] ?? big[0]] : [shop.defaultSize];
   const [i, setI] = useState(0);
   const [scene, setScene] = useState(SCENES[0]?.id);
   useEffect(() => {
@@ -24,7 +25,7 @@ export function RoomTeaser({ arts }: { arts: Artwork[] }) {
     <div>
       <RoomPreview
         image={art.image}
-        dims={plateDims(size, isLandscape(art))}
+        dims={shop.plateDims(size, isLandscape(art))}
         sceneId={scene}
         onSceneChange={setScene}
         controls={false}

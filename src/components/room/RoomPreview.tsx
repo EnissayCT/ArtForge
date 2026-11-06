@@ -4,14 +4,8 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { ImagePlus, Move } from "lucide-react";
 import { SCENES, type Scene } from "@/lib/media";
-import type { FinishId, FrameId } from "@/lib/pricing";
+import type { FinishLook } from "@/lib/pricing";
 import { clamp, cn } from "@/lib/utils";
-
-const FRAME_COLORS: Record<FrameId, string | null> = {
-  aucun: null,
-  chene: "#b88a5a",
-  noir: "#1b1a19",
-};
 
 const OWN_WALL_ID = "mon-mur";
 
@@ -19,8 +13,9 @@ interface Props {
   image: string;
   /** print size in cm, already oriented */
   dims: { w: number; h: number };
-  frame?: FrameId;
-  finish?: FinishId;
+  /** frame colour, omit for no frame */
+  frameColor?: string;
+  finish?: FinishLook;
   sceneId?: string;
   onSceneChange?: (id: string) => void;
   controls?: boolean;
@@ -33,7 +28,7 @@ interface Props {
 export function RoomPreview({
   image,
   dims,
-  frame = "aucun",
+  frameColor: frameProp,
   finish = "mat",
   sceneId,
   onSceneChange,
@@ -94,7 +89,7 @@ export function RoomPreview({
   top = clamp(top, 0.02, 1 - hFrac - 0.02);
   const left = scene.anchor.x - wFrac / 2;
 
-  const frameColor = FRAME_COLORS[frame];
+  const frameColor = frameProp && frameProp !== "transparent" ? frameProp : null;
   const framePx = frameColor ? Math.max(2, 2.2 * pxPerCm) : 0;
   const shadow = `${0.35 * pxPerCm}px ${0.9 * pxPerCm}px ${1.6 * pxPerCm}px rgba(0,0,0,.38), ${0.1 * pxPerCm}px ${0.25 * pxPerCm}px ${0.4 * pxPerCm}px rgba(0,0,0,.25)`;
 

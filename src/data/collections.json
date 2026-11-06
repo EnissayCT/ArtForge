@@ -1,0 +1,56 @@
+[
+  {
+    "slug": "japon",
+    "name": "Estampes japonaises",
+    "kicker": "Ukiyo-e",
+    "description": "Vagues, montagnes et pluies d'été : les maîtres de l'estampe d'Edo, en aplats francs qui ont été pensés pour l'impression."
+  },
+  {
+    "slug": "zellige",
+    "name": "Zellige",
+    "kicker": "Création ArtForge",
+    "description": "Notre série maison : les tracés des fontaines de Fès et des riads de Marrakech, redessinés pièce par pièce. Chaque carreau garde sa nuance, comme un zellige taillé à la main."
+  },
+  {
+    "slug": "espace",
+    "name": "Espace",
+    "kicker": "Ciel profond",
+    "description": "Nébuleuses et galaxies captées par Hubble et James Webb. Sur métal brillant, les étoiles prennent un éclat presque réel."
+  },
+  {
+    "slug": "maitres",
+    "name": "Grands maîtres",
+    "kicker": "Peinture",
+    "description": "Van Gogh, Monet, Klimt, Vermeer : les toiles que l'on reconnaît d'un regard, en version métal."
+  },
+  {
+    "slug": "abstrait",
+    "name": "Abstrait",
+    "kicker": "Formes & couleurs",
+    "description": "Kandinsky, Klee, Malevitch, Mondrian. Des compositions qui structurent un mur à elles seules."
+  },
+  {
+    "slug": "affiches",
+    "name": "Affiches vintage",
+    "kicker": "Belle Époque",
+    "description": "Mucha, Toulouse-Lautrec, Chéret : l'âge d'or de l'affiche lithographiée, couleurs ravivées."
+  },
+  {
+    "slug": "orient",
+    "name": "Maroc & Orient",
+    "kicker": "Carnets de voyage",
+    "description": "Tanger, Meknès, l'Atlas : le Maroc vu par les peintres voyageurs du XIXe siècle."
+  },
+  {
+    "slug": "botanique",
+    "name": "Botanique",
+    "kicker": "Planches",
+    "description": "Planches naturalistes de Redouté, Haeckel et Merian. Précision scientifique, élégance de cabinet."
+  },
+  {
+    "slug": "animaux",
+    "name": "Faune",
+    "kicker": "Bestiaire",
+    "description": "Oiseaux d'Audubon, lièvre de Dürer, carpes et grues japonaises."
+  }
+]

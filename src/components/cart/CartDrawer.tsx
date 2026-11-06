@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { useCallback } from "react";
 import { ArrowRight, Minus, Plus, X } from "lucide-react";
-import { useCart, cartTotals, unitPrice, type CartItem } from "@/lib/cart";
-import { BUNDLE, SHIPPING, formatDH } from "@/lib/pricing";
+import { useCart, type CartItem } from "@/lib/cart";
+import { formatDH } from "@/lib/pricing";
+import { useShop } from "@/components/providers/ShopProvider";
 import { useEscape, useHydrated, useLockBody } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
 import { CartThumb } from "./CartThumb";
@@ -12,6 +13,7 @@ import { CartThumb } from "./CartThumb";
 export function CartLine({ item, compact }: { item: CartItem; compact?: boolean }) {
   const setQty = useCart((s) => s.setQty);
   const remove = useCart((s) => s.remove);
+  const shop = useShop();
   return (
     <li className="flex gap-4 py-5">
       <CartThumb item={item} className={compact ? "w-[72px]" : "w-[92px]"} />
@@ -44,7 +46,7 @@ export function CartLine({ item, compact }: { item: CartItem; compact?: boolean 
               <Plus className="size-3.5" />
             </button>
           </div>
-          <p className="text-[15px] font-semibold tabular-nums">{formatDH(unitPrice(item) * item.qty)}</p>
+          <p className="text-[15px] font-semibold tabular-nums">{formatDH(shop.unitPrice(item) * item.qty)}</p>
         </div>
       </div>
     </li>
@@ -52,9 +54,11 @@ export function CartLine({ item, compact }: { item: CartItem; compact?: boolean 
 }
 
 export function ShippingMeter({ items }: { items: CartItem[] }) {
-  const t = cartTotals(items);
-  const pct = Math.min(100, ((SHIPPING.freeAbove - t.toFreeShipping) / SHIPPING.freeAbove) * 100);
-  const platesMissing = BUNDLE.minPlates - t.plateCount;
+  const shop = useShop();
+  const t = shop.totals(items);
+  const free = Math.max(1, shop.shipping.freeAbove);
+  const pct = Math.min(100, ((free - t.toFreeShipping) / free) * 100);
+  const platesMissing = shop.bundle.percent > 0 ? shop.bundle.minPlates - t.plateCount : 0;
   return (
     <div className="space-y-3">
       <div>
@@ -73,7 +77,7 @@ export function ShippingMeter({ items }: { items: CartItem[] }) {
       </div>
       {t.plateCount > 0 && platesMissing > 0 && (
         <p className="text-[13px] text-stone">
-          Ajoutez {platesMissing} plaque{platesMissing > 1 ? "s" : ""} : −{BUNDLE.percent} % sur toutes vos plaques.
+          Ajoutez {platesMissing} plaque{platesMissing > 1 ? "s" : ""} : −{shop.bundle.percent} % sur toutes vos plaques.
         </p>
       )}
     </div>
@@ -88,8 +92,9 @@ export function CartDrawer() {
   const close = useCallback(() => setOpen(false), [setOpen]);
   useLockBody(open);
   useEscape(close, open);
+  const shop = useShop();
   const list = hydrated ? items : [];
-  const t = cartTotals(list);
+  const t = shop.totals(list);
 
   return (
     <div className={cn("fixed inset-0 z-[70]", open ? "visible" : "invisible")} aria-hidden={!open}>
@@ -147,7 +152,7 @@ export function CartDrawer() {
                 </div>
                 {t.discount > 0 && (
                   <div className="flex justify-between text-ember-deep">
-                    <dt>Pack {BUNDLE.minPlates} plaques et + (−{BUNDLE.percent} %)</dt>
+                    <dt>Pack {shop.bundle.minPlates} plaques et + (−{shop.bundle.percent} %)</dt>
                     <dd className="tabular-nums">−{formatDH(t.discount)}</dd>
                   </div>
                 )}

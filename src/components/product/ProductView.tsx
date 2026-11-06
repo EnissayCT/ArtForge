@@ -2,25 +2,13 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Banknote, Box, Check, Heart, Home, Magnet, RotateCcw, Scan, Square } from "lucide-react";
 import type { Artwork, Collection } from "@/lib/catalog";
 import { isLandscape } from "@/lib/catalog";
-import {
-  DEFAULT_SIZE,
-  casePrice,
-  formatDH,
-  getCaseType,
-  getFinish,
-  getFrame,
-  plateDims,
-  platePrice,
-  type CaseTypeId,
-  type FinishId,
-  type FrameId,
-  type SizeId,
-} from "@/lib/pricing";
-import { DEFAULT_PHONE, getPhone } from "@/lib/phones";
+import { NO_FRAME, formatDH, type CaseTypeId, type FinishId, type FrameId, type SizeId } from "@/lib/pricing";
+import { useShop } from "@/components/providers/ShopProvider";
+import { track } from "@/lib/track";
 import { useCart } from "@/lib/cart";
 import { useWishlist } from "@/lib/wishlist";
 import { useHydrated } from "@/lib/hooks";
@@ -52,13 +40,14 @@ export function ProductView({
   initialKind?: "plate" | "case";
 }) {
   const landscape = isLandscape(art);
+  const shop = useShop();
   const [kind, setKind] = useState<"plate" | "case">(initialKind);
   const [view, setView] = useState<View>("apercu");
-  const [size, setSize] = useState<SizeId>(DEFAULT_SIZE);
-  const [finish, setFinish] = useState<FinishId>("mat");
-  const [frame, setFrame] = useState<FrameId>("aucun");
-  const [phoneId, setPhoneId] = useState(DEFAULT_PHONE);
-  const [caseType, setCaseType] = useState<CaseTypeId>("slim");
+  const [size, setSize] = useState<SizeId>(shop.defaultSize);
+  const [finish, setFinish] = useState<FinishId>(shop.defaultFinish);
+  const [frame, setFrame] = useState<FrameId>(NO_FRAME);
+  const [phoneId, setPhoneId] = useState(shop.defaultPhone);
+  const [caseType, setCaseType] = useState<CaseTypeId>(shop.defaultCaseType);
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
   const addTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -67,9 +56,16 @@ export function ProductView({
   const liked = useWishlist((s) => s.slugs.includes(art.slug));
   const toggleLike = useWishlist((s) => s.toggle);
 
-  const dims = plateDims(size, landscape);
-  const phone = getPhone(phoneId);
-  const price = kind === "plate" ? platePrice(size, finish, frame) : casePrice(caseType);
+  const dims = shop.plateDims(size, landscape);
+  const phone = shop.phone(phoneId);
+  const price = kind === "plate" ? shop.platePrice(size, finish, frame) : shop.casePrice(caseType);
+  const look = shop.finish(finish)?.look ?? "mat";
+  const caseStyle = shop.caseType(caseType)?.style ?? "slim";
+  const frameColor = shop.frame(frame)?.color ?? "transparent";
+
+  useEffect(() => {
+    track("product", { slug: art.slug, value: shop.platePrice(shop.defaultSize, shop.defaultFinish, NO_FRAME) });
+  }, [art.slug, shop]);
 
   const views: { id: View; label: string; icon: React.ReactNode }[] =
     kind === "plate"
@@ -96,7 +92,7 @@ export function ProductView({
           kind: "plate",
           artSlug: art.slug,
           title: art.title,
-          subtitle: `Plaque ${size} · ${dims.w}×${dims.h} cm · ${getFinish(finish).label}${frame !== "aucun" ? ` · ${getFrame(frame).label}` : ""}`,
+          subtitle: `Plaque ${shop.size(size).label} · ${dims.w}×${dims.h} cm · ${shop.finish(finish)?.label ?? ""}${frame !== NO_FRAME ? ` · ${shop.frame(frame)?.label ?? ""}` : ""}`,
           thumb: art.image,
           landscape,
           size,
@@ -111,7 +107,7 @@ export function ProductView({
           kind: "case",
           artSlug: art.slug,
           title: art.title,
-          subtitle: `Coque ${getCaseType(caseType).label} · ${phone.name}`,
+          subtitle: `Coque ${shop.caseType(caseType)?.label ?? ""} · ${phone.name}`,
           thumb: art.image,
           phone: phone.id,
           caseType,
@@ -119,6 +115,7 @@ export function ProductView({
         qty,
       );
     }
+    track("add", { slug: art.slug, value: price * qty });
     setAdded(true);
     clearTimeout(addTimer.current);
     addTimer.current = setTimeout(() => setAdded(false), 2200);
@@ -160,13 +157,13 @@ export function ProductView({
                       width: landscape ? `${58 + (dims.w / 90) * 36}%` : "auto",
                       backgroundColor: art.color,
                       boxShadow:
-                        frame !== "aucun"
-                          ? `0 0 0 clamp(6px,1.4vw,14px) ${getFrame(frame).color}, 0 30px 50px -20px rgba(0,0,0,.5)`
+                        frame !== NO_FRAME
+                          ? `0 0 0 clamp(6px,1.4vw,14px) ${frameColor}, 0 30px 50px -20px rgba(0,0,0,.5)`
                           : undefined,
                     }}
                   >
                     <Image src={art.image} alt={art.title} fill priority sizes="(min-width:1024px) 55vw, 90vw" className="rounded-[2px] object-cover" />
-                    {finish !== "mat" && (
+                    {look !== "mat" && (
                       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(125deg,rgba(255,255,255,.2)_0%,transparent_35%,transparent_70%,rgba(255,255,255,.06)_100%)]" />
                     )}
                   </div>
@@ -180,9 +177,9 @@ export function ProductView({
               {view === "3d" && (
                 <div className="absolute inset-0">
                   {kind === "plate" ? (
-                    <PlateViewer image={art.image} dims={dims} finish={finish} frame={frame} />
+                    <PlateViewer image={art.image} dims={dims} finish={look} frameColor={frame !== NO_FRAME ? frameColor : undefined} />
                   ) : (
-                    <PhoneViewer image={art.image} phone={phone} caseType={caseType} />
+                    <PhoneViewer image={art.image} phone={phone} caseType={caseStyle} />
                   )}
                   <p className="label pointer-events-none absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-2 whitespace-nowrap text-paper/50">
                     <RotateCcw className="size-3.5" /> Glissez pour tourner · pincez pour zoomer
@@ -190,7 +187,7 @@ export function ProductView({
                 </div>
               )}
               {view === "mur" && (
-                <RoomPreview image={art.image} dims={dims} frame={frame} finish={finish} />
+                <RoomPreview image={art.image} dims={dims} frameColor={frame !== NO_FRAME ? frameColor : undefined} finish={look} />
               )}
               {view === "detail" && <DetailZoom src={art.image} />}
             </div>
@@ -307,13 +304,15 @@ export function ProductView({
                     </Link>
                   ))}
                 </p>
-                <p className="mt-2 text-[12.5px] text-stone">
-                  Source :{" "}
-                  <a href={art.source} target="_blank" rel="noreferrer" className="underline">
-                    numérisation d&apos;origine
-                  </a>{" "}
-                  · {art.license}
-                </p>
+                {art.source && (
+                  <p className="mt-2 text-[12.5px] text-stone">
+                    Source :{" "}
+                    <a href={art.source} target="_blank" rel="noreferrer" className="underline">
+                      numérisation d&apos;origine
+                    </a>
+                    {art.license ? ` · ${art.license}` : ""}
+                  </p>
+                )}
               </Accordion>
               {kind === "plate" ? (
                 <Accordion title="Matière & impression">
@@ -337,7 +336,9 @@ export function ProductView({
                 <ul className="space-y-1.5">
                   <li>Production en 48 h dans notre atelier, puis livraison en 24 à 72 h.</li>
                   <li>Paiement en espèces à la livraison, partout au Maroc.</li>
-                  <li>Livraison offerte dès 500 DH, sinon 35 DH.</li>
+                  <li>
+                    Livraison offerte dès {formatDH(shop.shipping.freeAbove)}, sinon {formatDH(shop.shipping.price)}.
+                  </li>
                   <li>
                     Arrivée abîmée ? On la réimprime gratuitement. Retours sous 14 jours pour les œuvres du catalogue.{" "}
                     <Link href="/aide#retours" className="underline">En savoir plus</Link>

@@ -4,13 +4,14 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRight, Search, X } from "lucide-react";
-import { COLLECTIONS, search, mixed, getCollection } from "@/lib/catalog";
+import { useCatalog } from "@/components/providers/ShopProvider";
 import { useEscape, useLockBody } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
 
 const SUGGESTIONS = ["Hokusai", "Nébuleuse", "Van Gogh", "Tanger", "Kandinsky", "Fleurs", "Mucha"];
 
 export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const catalog = useCatalog();
   const [q, setQ] = useState("");
   const input = useRef<HTMLInputElement>(null);
   useLockBody(open);
@@ -20,7 +21,8 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
     if (open) setTimeout(() => input.current?.focus(), 60);
   }, [open]);
 
-  const results = useMemo(() => (q.trim() ? search(q).slice(0, 12) : mixed(6, 3)), [q]);
+  const found = useMemo(() => (q.trim() ? catalog.search(q) : []), [q, catalog]);
+  const results = q.trim() ? found.slice(0, 12) : catalog.mixed(6, 3);
 
   return (
     <div
@@ -69,7 +71,7 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
 
         <div className="mt-12 flex items-baseline justify-between">
           <p className="label text-stone">
-            {q.trim() ? `${search(q).length} résultat(s)` : "Suggestions"}
+            {q.trim() ? `${found.length} résultat(s)` : "Suggestions"}
           </p>
           {q.trim() && (
             <Link href={`/boutique?q=${encodeURIComponent(q.trim())}`} onClick={onClose} className="label link-u flex items-center gap-1">
@@ -84,7 +86,7 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
                 <Image src={a.image} alt="" fill sizes="200px" className="object-cover" />
               </div>
               <p className="mt-2.5 truncate text-[14px] font-semibold">{a.title}</p>
-              <p className="truncate text-[12px] text-stone">{getCollection(a.collection)?.name}</p>
+              <p className="truncate text-[12px] text-stone">{catalog.collection(a.collection)?.name}</p>
             </Link>
           ))}
         </div>
@@ -102,7 +104,7 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
         <div className="mt-16 border-t border-ink/10 pt-8">
           <p className="label mb-4 text-stone">Parcourir</p>
           <div className="flex flex-wrap gap-x-8 gap-y-3">
-            {COLLECTIONS.map((c) => (
+            {catalog.collections.map((c) => (
               <Link key={c.slug} href={`/collections/${c.slug}`} onClick={onClose} className="display-semi link-u text-2xl">
                 {c.name}
               </Link>

@@ -1,0 +1,64 @@
+[Unit]
+Description=ArtForge — boutique d'affiches en métal (Next.js)
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=300
+StartLimitBurst=10
+
+[Service]
+Type=simple
+User=artforge
+Group=artforge
+WorkingDirectory=/srv/artforge/current
+# ADMIN_PASSWORD_HASH, ADMIN_TOTP_SECRET, NEXT_PUBLIC_APP_URL (root:artforge 0640)
+EnvironmentFile=/etc/artforge/env
+Environment=NODE_ENV=production
+Environment=PORT=3004
+Environment=HOSTNAME=127.0.0.1
+Environment=NEXT_TELEMETRY_DISABLED=1
+Environment=ARTFORGE_DATA_DIR=/srv/artforge/data
+Environment=NODE_OPTIONS=--max-old-space-size=384
+ExecStartPre=+/usr/bin/install -d -o artforge -g artforge -m 0750 /srv/artforge/current/.next/cache
+ExecStart=/usr/local/bin/node /srv/artforge/current/server.js
+Restart=always
+RestartSec=3
+TimeoutStopSec=20
+SuccessExitStatus=143
+
+# share the box politely with the other apps
+MemoryHigh=500M
+MemoryMax=700M
+CPUWeight=50
+TasksMax=256
+OOMPolicy=continue
+
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+ProtectClock=true
+ProtectHostname=true
+ProtectProc=invisible
+ProcSubset=pid
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+LockPersonality=true
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
+CapabilityBoundingSet=
+AmbientCapabilities=
+# only the data folder (orders, uploads, settings) and Next's image cache are writable
+# "-": a fresh release has no cache folder yet; ExecStartPre creates it before the app starts
+ReadWritePaths=/srv/artforge/data -/srv/artforge/current/.next/cache
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

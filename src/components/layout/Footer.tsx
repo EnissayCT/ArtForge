@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { Mark } from "@/components/brand/Logo";
-import { COLLECTIONS } from "@/lib/catalog";
-import { SITE } from "@/lib/site";
+import { waLink } from "@/lib/site";
+import { getCatalog, getShop } from "@/lib/data";
 import { NewsletterForm } from "./NewsletterForm";
 
-const COLUMNS = [
+const columns = (brand: { name: string; instagram: string; whatsapp: string }) => [
   {
     title: "Boutique",
     links: [
@@ -25,23 +25,25 @@ const COLUMNS = [
     ],
   },
   {
-    title: "ArtForge",
+    title: brand.name,
     links: [
       { label: "L'atelier", href: "/atelier" },
       { label: "Commandes pro & cadeaux", href: "/atelier#pro" },
-      { label: "Instagram", href: SITE.instagram },
-      { label: "WhatsApp", href: `https://wa.me/${SITE.whatsapp}` },
+      { label: "Instagram", href: brand.instagram },
+      { label: "WhatsApp", href: waLink(brand.whatsapp) },
     ],
   },
 ];
 
-export function Footer() {
+export async function Footer() {
+  const [{ brand }, catalog] = await Promise.all([getShop(), getCatalog()]);
+  const COLUMNS = columns(brand);
   return (
     <footer className="bg-ink text-paper">
       <div className="mx-auto max-w-[1440px] px-4 pt-20 sm:px-8">
         <div className="grid gap-14 lg:grid-cols-12">
           <div className="lg:col-span-5">
-            <p className="label text-paper/50">Le club ArtForge</p>
+            <p className="label text-paper/50">Le club {brand.name}</p>
             <h2 className="display mt-4 text-[54px] sm:text-[72px]">
               Les nouvelles séries,
               <br />
@@ -70,7 +72,7 @@ export function Footer() {
             <div>
               <p className="label mb-5 text-paper/45">Collections</p>
               <ul className="space-y-2.5">
-                {COLLECTIONS.slice(0, 6).map((c) => (
+                {catalog.collections.slice(0, 6).map((c) => (
                   <li key={c.slug}>
                     <Link href={`/collections/${c.slug}`} className="link-u text-[14px] text-paper/80 hover:text-paper">
                       {c.name}
@@ -93,10 +95,10 @@ export function Footer() {
         <div className="mx-auto flex max-w-[1440px] items-end justify-between gap-6 px-4 pb-6 pt-10 sm:px-8">
           <div className="flex items-end gap-4 sm:gap-6">
             <Mark className="h-[64px] w-auto text-paper sm:h-[118px]" />
-            <span className="display text-[76px] leading-[0.76] sm:text-[160px] lg:text-[210px]">ArtForge</span>
+            <span className="display text-[clamp(52px,17vw,76px)] leading-[0.76] sm:text-[160px] lg:text-[210px]">{brand.name}</span>
           </div>
           <div className="hidden pb-2 text-right text-[12px] text-paper/40 md:block">
-            <p>© {new Date().getFullYear()} ArtForge — {SITE.city}, Maroc</p>
+            <p>© {new Date().getFullYear()} {brand.name} — {brand.city}, Maroc</p>
             <p className="mt-1">
               <Link href="/aide#cgv" className="hover:text-paper">CGV</Link> ·{" "}
               <Link href="/aide#confidentialite" className="hover:text-paper">Confidentialité</Link> ·{" "}

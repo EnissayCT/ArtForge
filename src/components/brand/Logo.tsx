@@ -23,7 +23,15 @@ export function Mark({ className, animated = false }: { className?: string; anim
   );
 }
 
-export function Logo({ className, markClassName }: { className?: string; markClassName?: string }) {
+export function Logo({
+  className,
+  markClassName,
+  name = "ArtForge",
+}: {
+  className?: string;
+  markClassName?: string;
+  name?: string;
+}) {
   return (
     <span className={cn("inline-flex items-center gap-2.5 group/logo", className)}>
       <Mark animated className={cn("h-[26px] w-auto", markClassName)} />
@@ -31,7 +39,7 @@ export function Logo({ className, markClassName }: { className?: string; markCla
         className="font-sans text-[23px] font-extrabold uppercase leading-none tracking-[0.02em]"
         style={{ fontStretch: "62%" }}
       >
-        Art<span className="tracking-[0.02em]">Forge</span>
+        {name}
       </span>
     </span>
   );

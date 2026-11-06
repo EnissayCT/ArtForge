@@ -6,36 +6,30 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Heart, Menu, Search, ShoppingBag, X, ArrowUpRight } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
-import { NAV, SITE } from "@/lib/site";
-import { COLLECTIONS, byCollection, collectionCover } from "@/lib/catalog";
-import { useCart, cartTotals } from "@/lib/cart";
+import { NAV, waLink } from "@/lib/site";
+import { useCart } from "@/lib/cart";
 import { useWishlist } from "@/lib/wishlist";
 import { useHydrated, useLockBody } from "@/lib/hooks";
-import { SHIPPING, formatDH } from "@/lib/pricing";
+import { useCatalog, useShop } from "@/components/providers/ShopProvider";
 import { SearchOverlay } from "./SearchOverlay";
 import { cn } from "@/lib/utils";
 
-const MESSAGES = [
-  "Paiement à la livraison partout au Maroc",
-  `Livraison offerte dès ${formatDH(SHIPPING.freeAbove)}`,
-  "−15 % dès 3 plaques",
-  "Fixation aimantée incluse — zéro perçage",
-];
-
 function AnnouncementBar() {
+  const { announcements, brand } = useShop();
+  const MESSAGES = announcements.length ? announcements : [""];
   const [i, setI] = useState(0);
   useEffect(() => {
     const t = setInterval(() => setI((n) => (n + 1) % MESSAGES.length), 4200);
     return () => clearInterval(t);
-  }, []);
+  }, [MESSAGES.length]);
   return (
     <div className="bg-ink text-paper/85">
       <div className="mx-auto flex h-9 max-w-[1440px] items-center justify-center px-4 sm:justify-between sm:px-8">
-        <span className="label hidden text-paper/50 sm:inline">Imprimé à Casablanca</span>
+        <span className="label hidden text-paper/50 sm:inline">Imprimé à {brand.city}</span>
         <div className="relative h-4 w-full overflow-hidden text-center sm:w-[420px]">
           {MESSAGES.map((m, n) => (
             <span
-              key={m}
+              key={`${n}-${m}`}
               className={cn(
                 "label absolute inset-0 transition-all duration-700 ease-[var(--ease-out-expo)]",
                 n === i ? "translate-y-0 opacity-100" : n < i ? "-translate-y-full opacity-0" : "translate-y-full opacity-0",
@@ -45,7 +39,7 @@ function AnnouncementBar() {
             </span>
           ))}
         </div>
-        <a href={`https://wa.me/${SITE.whatsapp}`} target="_blank" rel="noreferrer" className="label hidden text-paper/50 hover:text-paper sm:inline">
+        <a href={waLink(brand.whatsapp)} target="_blank" rel="noreferrer" className="label hidden text-paper/50 hover:text-paper sm:inline">
           Aide WhatsApp
         </a>
       </div>
@@ -54,7 +48,11 @@ function AnnouncementBar() {
 }
 
 function CollectionsPanel({ onNavigate }: { onNavigate: () => void }) {
-  const covers = ["japon", "espace", "orient"].map((s) => ({ c: COLLECTIONS.find((x) => x.slug === s)!, a: collectionCover(s) }));
+  const catalog = useCatalog();
+  const COLLECTIONS = catalog.collections;
+  const preferred = ["japon", "espace", "orient"].filter((s) => COLLECTIONS.some((c) => c.slug === s));
+  const picks = [...preferred, ...COLLECTIONS.map((c) => c.slug).filter((s) => !preferred.includes(s))].slice(0, 3);
+  const covers = picks.map((s) => ({ c: catalog.collection(s)!, a: catalog.cover(s) }));
   return (
     <div className="mx-auto grid max-w-[1440px] grid-cols-12 gap-8 px-8 py-10">
       <div className="col-span-4">
@@ -68,7 +66,7 @@ function CollectionsPanel({ onNavigate }: { onNavigate: () => void }) {
                 className="group flex items-baseline justify-between border-b rule py-2.5"
               >
                 <span className="display-semi text-2xl transition-transform duration-500 group-hover:translate-x-1.5">{c.name}</span>
-                <span className="label text-stone">{byCollection(c.slug).length}</span>
+                <span className="label text-stone">{catalog.byCollection(c.slug).length}</span>
               </Link>
             </li>
           ))}
@@ -96,6 +94,8 @@ function CollectionsPanel({ onNavigate }: { onNavigate: () => void }) {
 
 export function Header() {
   const pathname = usePathname();
+  const shop = useShop();
+  const { collections } = useCatalog();
   const hydrated = useHydrated();
   const items = useCart((s) => s.items);
   const setOpen = useCart((s) => s.setOpen);
@@ -109,7 +109,7 @@ export function Header() {
   const setMenu = (open: boolean) => setMenuAt(open ? pathname : null);
   const setPanel = (open: boolean) => setPanelAt(open ? pathname : null);
   const [scrolled, setScrolled] = useState(false);
-  const count = hydrated ? cartTotals(items).count : 0;
+  const count = hydrated ? items.reduce((n, i) => n + i.qty, 0) : 0;
   useLockBody(menu);
 
   useEffect(() => {
@@ -137,8 +137,8 @@ export function Header() {
           >
             <Menu className="size-5" strokeWidth={1.6} />
           </button>
-          <Link href="/" aria-label="ArtForge, accueil" className="shrink-0">
-            <Logo />
+          <Link href="/" aria-label={`${shop.brand.name}, accueil`} className="shrink-0">
+            <Logo name={shop.brand.name} />
           </Link>
 
           <nav className="ml-6 hidden items-center gap-7 lg:flex" aria-label="Navigation principale">
@@ -201,7 +201,7 @@ export function Header() {
         )}
       >
         <div className="flex h-16 items-center justify-between px-4">
-          <Logo />
+          <Logo name={shop.brand.name} />
           <button onClick={() => setMenu(false)} aria-label="Fermer le menu" className="p-2">
             <X className="size-6" strokeWidth={1.5} />
           </button>
@@ -218,7 +218,7 @@ export function Header() {
             </Link>
           ))}
           <div className="mt-8 grid grid-cols-2 gap-2">
-            {COLLECTIONS.map((c) => (
+            {collections.map((c) => (
               <Link key={c.slug} href={`/collections/${c.slug}`} className="label py-2 text-paper/60">
                 {c.name}
               </Link>

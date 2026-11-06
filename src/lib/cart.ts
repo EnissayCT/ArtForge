@@ -3,7 +3,6 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import type { CaseTypeId, FinishId, FrameId, SizeId } from "./pricing";
-import { casePrice, platePrice } from "./pricing";
 
 export type CartItem =
   | {
@@ -35,10 +34,6 @@ export type CartItem =
     };
 
 export type NewCartItem = CartItem extends infer T ? (T extends CartItem ? Omit<T, "key" | "qty"> : never) : never;
-
-export function unitPrice(item: CartItem) {
-  return item.kind === "plate" ? platePrice(item.size, item.finish, item.frame) : casePrice(item.caseType);
-}
 
 function itemKey(i: NewCartItem) {
   return i.kind === "plate"
@@ -86,5 +81,3 @@ export const useCart = create<CartState>()(
     },
   ),
 );
-
-export { cartTotals } from "./totals";

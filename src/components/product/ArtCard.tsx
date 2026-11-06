@@ -6,7 +6,8 @@ import { Heart, Rotate3d } from "lucide-react";
 import { useQuickView } from "@/components/viewer/QuickView3D";
 import type { Artwork } from "@/lib/catalog";
 import { isLandscape } from "@/lib/catalog";
-import { SIZES, formatDH } from "@/lib/pricing";
+import { formatDH } from "@/lib/pricing";
+import { useShop } from "@/components/providers/ShopProvider";
 import { useWishlist } from "@/lib/wishlist";
 import { useHydrated } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
@@ -27,6 +28,7 @@ export function ArtCard({
   const liked = useWishlist((s) => s.slugs.includes(art.slug));
   const toggle = useWishlist((s) => s.toggle);
   const showQuick = useQuickView((s) => s.show);
+  const { fromPrice } = useShop();
 
   return (
     <article className={cn("group relative", className)}>
@@ -88,7 +90,7 @@ export function ArtCard({
           </p>
         </div>
         <p className={cn("label shrink-0 sm:pt-0.5", tone === "paper" ? "text-ink/70" : "text-paper/70")}>
-          dès {formatDH(SIZES[0].price)}
+          dès {formatDH(fromPrice)}
         </p>
       </div>
     </article>

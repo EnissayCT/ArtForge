@@ -1,20 +1,8 @@
 "use client";
 
 import { ChevronDown } from "lucide-react";
-import {
-  CASE_TYPES,
-  FINISHES,
-  FRAMES,
-  SIZES,
-  formatDH,
-  getFinish,
-  getSize,
-  type CaseTypeId,
-  type FinishId,
-  type FrameId,
-  type SizeId,
-} from "@/lib/pricing";
-import { BRANDS, PHONES, getPhone } from "@/lib/phones";
+import { NO_FRAME, formatDH, type CaseTypeId, type FinishId, type FrameId, type SizeId } from "@/lib/pricing";
+import { useShop } from "@/components/providers/ShopProvider";
 import { cn } from "@/lib/utils";
 
 export function OptionLabel({ title, value, aside }: { title: string; value?: string; aside?: React.ReactNode }) {
@@ -64,7 +52,9 @@ export function SizePicker({
   onChange: (v: SizeId) => void;
   landscape?: boolean;
 }) {
-  const s = getSize(value);
+  const shop = useShop();
+  const s = shop.size(value);
+  const tallest = Math.max(...shop.sizes.map((x) => Math.max(x.w, x.h)), 1);
   return (
     <div>
       <OptionLabel
@@ -76,11 +66,16 @@ export function SizePicker({
           </a>
         }
       />
-      <div className="grid grid-cols-4 gap-2" role="radiogroup" aria-label="Format">
-        {SIZES.map((size) => {
+      <div
+        className="grid gap-2"
+        style={{ gridTemplateColumns: `repeat(${Math.min(Math.max(shop.sizes.length, 1), 4)}, minmax(0, 1fr))` }}
+        role="radiogroup"
+        aria-label="Format"
+      >
+        {shop.sizes.map((size) => {
           const active = size.id === value;
-          // drawn to scale: XL is the reference
-          const scale = size.h / 90;
+          // drawn to scale: the largest size is the reference
+          const scale = Math.max(size.w, size.h) / tallest;
           return (
             <button
               key={size.id}
@@ -126,12 +121,14 @@ export function SizePicker({
 }
 
 export function FinishPicker({ value, onChange }: { value: FinishId; onChange: (v: FinishId) => void }) {
-  const f = getFinish(value);
+  const shop = useShop();
+  const f = shop.finish(value);
+  if (!f) return null;
   return (
     <div>
       <OptionLabel title="Finition" value={f.label} />
       <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Finition">
-        {FINISHES.map((finish) => {
+        {shop.finishes.map((finish) => {
           const active = finish.id === value;
           return (
             <button
@@ -150,9 +147,9 @@ export function FinishPicker({ value, onChange }: { value: FinishId; onChange: (
                   className="size-3.5 shrink-0 rounded-full border border-ink/20"
                   style={{
                     background:
-                      finish.id === "brillant"
+                      finish.look === "brillant"
                         ? "radial-gradient(circle at 30% 30%, #fff 0 18%, #3a3632 60%)"
-                        : finish.id === "brosse"
+                        : finish.look === "brosse"
                           ? "repeating-linear-gradient(90deg,#c9ccd1 0 1px,#a7abb1 1px 2px)"
                           : "#4a4540",
                   }}
@@ -171,12 +168,14 @@ export function FinishPicker({ value, onChange }: { value: FinishId; onChange: (
 }
 
 export function FramePicker({ value, onChange, size }: { value: FrameId; onChange: (v: FrameId) => void; size: SizeId }) {
-  const s = getSize(size);
+  const shop = useShop();
+  const s = shop.size(size);
+  if (shop.frames.length < 2) return null;
   return (
     <div>
-      <OptionLabel title="Cadre" value={FRAMES.find((f) => f.id === value)?.label} />
+      <OptionLabel title="Cadre" value={shop.frames.find((f) => f.id === value)?.label} />
       <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Cadre">
-        {FRAMES.map((frame) => {
+        {shop.frames.map((frame) => {
           const active = frame.id === value;
           return (
             <button
@@ -192,13 +191,13 @@ export function FramePicker({ value, onChange, size }: { value: FrameId; onChang
               <span
                 className="grid size-5 place-items-center border"
                 style={{
-                  borderColor: frame.id === "aucun" ? "rgba(19,18,17,.25)" : frame.color,
-                  borderWidth: frame.id === "aucun" ? 1 : 4,
-                  borderStyle: frame.id === "aucun" ? "dashed" : "solid",
+                  borderColor: frame.id === NO_FRAME ? "rgba(19,18,17,.25)" : frame.color,
+                  borderWidth: frame.id === NO_FRAME ? 1 : 4,
+                  borderStyle: frame.id === NO_FRAME ? "dashed" : "solid",
                 }}
               />
               <span className="font-medium">{frame.label}</span>
-              {frame.id !== "aucun" && <span className="text-stone">+{formatDH(s.framePrice)}</span>}
+              {frame.id !== NO_FRAME && <span className="text-stone">+{formatDH(s.framePrice)}</span>}
             </button>
           );
         })}
@@ -208,15 +207,16 @@ export function FramePicker({ value, onChange, size }: { value: FrameId; onChang
 }
 
 export function PhonePicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  const phone = getPhone(value);
+  const shop = useShop();
+  const phone = shop.phone(value);
   return (
     <div>
       <OptionLabel title="Téléphone" value={phone.name} />
       <div className="mb-2 flex gap-1">
-        {BRANDS.map((b) => (
+        {shop.brands.map((b) => (
           <button
             key={b}
-            onClick={() => onChange(PHONES.find((p) => p.brand === b)!.id)}
+            onClick={() => onChange(shop.phones.find((p) => p.brand === b)!.id)}
             className={cn(
               "px-3 py-1.5 text-[13px] font-medium transition-colors",
               phone.brand === b ? "bg-ink text-paper" : "bg-paper-2 hover:bg-paper-3",
@@ -233,7 +233,7 @@ export function PhonePicker({ value, onChange }: { value: string; onChange: (v: 
           className="field appearance-none pr-10"
           aria-label="Modèle de téléphone"
         >
-          {PHONES.filter((p) => p.brand === phone.brand).map((p) => (
+          {shop.phones.filter((p) => p.brand === phone.brand).map((p) => (
             <option key={p.id} value={p.id}>
               {p.name}
             </option>
@@ -249,11 +249,12 @@ export function PhonePicker({ value, onChange }: { value: string; onChange: (v: 
 }
 
 export function CaseTypePicker({ value, onChange }: { value: CaseTypeId; onChange: (v: CaseTypeId) => void }) {
+  const shop = useShop();
   return (
     <div>
       <OptionLabel title="Type de coque" />
       <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Type de coque">
-        {CASE_TYPES.map((c) => {
+        {shop.caseTypes.map((c) => {
           const active = c.id === value;
           return (
             <button

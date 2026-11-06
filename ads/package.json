@@ -1,0 +1,24 @@
+{
+  "name": "artforge-ads",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Reels ads + site loops for the metal-poster storefront, built with Remotion.",
+  "scripts": {
+    "studio": "node scripts/make-audio.mjs && remotion studio src/index.ts",
+    "audio": "node scripts/make-audio.mjs",
+    "render": "node scripts/render-all.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.541",
+    "@remotion/google-fonts": "4.0.541",
+    "@remotion/media": "4.0.541",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "remotion": "4.0.541"
+  },
+  "devDependencies": {
+    "@types/react": "19.3.0",
+    "typescript": "5.9.3"
+  }
+}

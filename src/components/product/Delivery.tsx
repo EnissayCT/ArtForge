@@ -1,13 +1,15 @@
 "use client";
 
 import { Truck } from "lucide-react";
-import { SHIPPING, deliveryWindow } from "@/lib/pricing";
+import { deliveryWindow } from "@/lib/pricing";
 import { useHydrated } from "@/lib/hooks";
+import { useShop } from "@/components/providers/ShopProvider";
 
 export function DeliveryEstimate() {
   const hydrated = useHydrated();
-  const fast = deliveryWindow(new Date(), SHIPPING.casablanca);
-  const other = deliveryWindow(new Date(), SHIPPING.others);
+  const { shipping } = useShop();
+  const fast = deliveryWindow(new Date(), shipping.fast);
+  const other = deliveryWindow(new Date(), shipping.others);
   return (
     <div className="flex gap-3 text-[13.5px]">
       <Truck className="mt-0.5 size-[18px] shrink-0" strokeWidth={1.5} />

@@ -2,19 +2,21 @@
 
 import Image from "next/image";
 import type { CartItem } from "@/lib/cart";
-import { getPhone } from "@/lib/phones";
+import { useShop } from "@/components/providers/ShopProvider";
 import { PhoneMockup } from "@/components/phone/PhoneMockup";
 import { cn } from "@/lib/utils";
 
 export function CartThumb({ item, className }: { item: CartItem; className?: string }) {
+  const shop = useShop();
   if (item.kind === "case") {
     return (
       <div className={cn("grid aspect-[4/5] shrink-0 place-items-center bg-paper-2 p-2", className)}>
-        <PhoneMockup image={item.thumb} phone={getPhone(item.phone)} className="h-[86%]" />
+        <PhoneMockup image={item.thumb} phone={shop.phone(item.phone)} className="h-[86%]" />
       </div>
     );
   }
-  const frame = item.frame === "chene" ? "#b88a5a" : item.frame === "noir" ? "#1b1a19" : null;
+  const f = shop.frame(item.frame);
+  const frame = item.frame !== "aucun" && f && f.color !== "transparent" ? f.color : null;
   return (
     <div className={cn("grid aspect-[4/5] shrink-0 place-items-center bg-paper-2", className)}>
       <div

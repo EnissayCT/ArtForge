@@ -5,74 +5,172 @@ import { useEffect, useMemo, useRef } from "react";
 import { Canvas } from "@react-three/fiber";
 import { ContactShadows, OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
-import type { FinishId, FrameId } from "@/lib/pricing";
-import { StudioEnvironment, useBackTexture, useCoverTexture, useGlintMaterial, useIntroMotion } from "./common";
+import type { FinishLook } from "@/lib/pricing";
+import {
+  StudioEnvironment,
+  planarShapeGeometry,
+  roundedRectShape,
+  useBackTexture,
+  useCoverTexture,
+  useGlintMaterial,
+  useIntroMotion,
+} from "./common";
+import { buildPrintMaps, orangePeel } from "./printSurface";
 
 export interface PlateViewerProps {
   image: string;
   /** cm, already oriented */
   dims: { w: number; h: number };
-  finish?: FinishId;
-  frame?: FrameId;
+  finish?: FinishLook;
+  /** frame colour, omit for no frame */
+  frameColor?: string;
   background?: "ink" | "paper";
+  brand?: string;
 }
 
 const U = 0.1; // 1 scene unit = 10 cm
-const THICK = 0.012;
+const THICK = 0.01; // 1 mm steel plate
+const BEVEL = 0.0007; // rolled edge that catches the light
+const RADIUS = 0.035; // 3.5 mm rounded corners
 
-function finishProps(finish: FinishId): THREE.MeshPhysicalMaterialParameters {
-  switch (finish) {
+/** Physical parameters of the UV-printed surface, per finish. */
+function surfaceProps(look: FinishLook): THREE.MeshPhysicalMaterialParameters {
+  switch (look) {
     case "brillant":
-      return { roughness: 0.32, metalness: 0.1, clearcoat: 0.8, clearcoatRoughness: 0.06, envMapIntensity: 0.75 };
+      // cured ink under a UV gloss varnish
+      return {
+        roughness: 1,
+        metalness: 1,
+        clearcoat: 1,
+        clearcoatRoughness: 0.05,
+        clearcoatNormalScale: new THREE.Vector2(0.22, 0.22),
+        envMapIntensity: 0.8,
+        normalScale: new THREE.Vector2(0.16, 0.16),
+      };
     case "brosse":
-      return { roughness: 0.38, metalness: 0.55, clearcoat: 0.25, clearcoatRoughness: 0.3, envMapIntensity: 1.3 };
+      // ink printed straight on brushed aluminium: light areas stay bare metal
+      return {
+        roughness: 1,
+        metalness: 1,
+        anisotropy: 0.65,
+        anisotropyRotation: 0,
+        clearcoat: 0.15,
+        clearcoatRoughness: 0.35,
+        envMapIntensity: 1.25,
+        normalScale: new THREE.Vector2(0.2, 0.2),
+      };
     default:
-      return { roughness: 0.72, metalness: 0.05, clearcoat: 0, envMapIntensity: 0.55 };
+      // matte UV ink: velvety, with a soft sheen at grazing angles
+      return {
+        roughness: 1,
+        metalness: 1,
+        sheen: 0.35,
+        sheenRoughness: 0.7,
+        sheenColor: new THREE.Color("#ffffff"),
+        envMapIntensity: 0.55,
+        normalScale: new THREE.Vector2(0.28, 0.28),
+      };
   }
 }
 
-function Plate({ image, dims, finish = "mat", frame = "aucun" }: PlateViewerProps) {
+function Plate({ image, dims, finish = "mat", frameColor, brand = "ArtForge" }: PlateViewerProps) {
   const w = dims.w * U;
   const h = dims.h * U;
   const group = useRef<THREE.Group>(null);
   const tex = useCoverTexture(image, dims.w / dims.h);
   const glint = useGlintMaterial(dims.w / dims.h);
-  const back = useBackTexture(`${dims.w} × ${dims.h} CM`);
+  const back = useBackTexture(`${dims.w} × ${dims.h} CM`, brand);
   useIntroMotion(group, glint, {
     restIntensity: finish === "brillant" ? 0.14 : finish === "brosse" ? 0.12 : 0.05,
     replayKey: `${image}-${dims.w}-${finish}`,
     ready: !!tex,
   });
 
+  // geometry: rounded steel blank with a rolled edge, print and back as separate skins
+  const geo = useMemo(() => {
+    const outline = roundedRectShape(w - BEVEL * 2, h - BEVEL * 2, RADIUS);
+    const body = new THREE.ExtrudeGeometry(outline, {
+      depth: THICK,
+      bevelEnabled: true,
+      bevelThickness: BEVEL,
+      bevelSize: BEVEL,
+      bevelSegments: 3,
+      curveSegments: 10,
+    });
+    body.translate(0, 0, -THICK / 2);
+    const skin = roundedRectShape(w - BEVEL * 2.4, h - BEVEL * 2.4, RADIUS * 0.96);
+    return { body, face: planarShapeGeometry(skin, 10), glint: planarShapeGeometry(roundedRectShape(w, h, RADIUS), 10) };
+  }, [w, h]);
+  useEffect(() => () => [geo.body, geo.face, geo.glint].forEach((g) => g.dispose()), [geo]);
+
+  // ink relief + roughness/metal maps, derived from the artwork itself
+  const maps = useMemo(() => {
+    if (!tex?.image) return null;
+    const img = tex.image as HTMLImageElement;
+    const seed = Array.from(image).reduce((a, ch) => (a * 31 + ch.charCodeAt(0)) | 0, 7);
+    const m = buildPrintMaps(img, finish, seed);
+    for (const t of [m.normal, m.orm]) {
+      t.repeat.copy(tex.repeat);
+      t.offset.copy(tex.offset);
+    }
+    return m;
+  }, [tex, finish, image]);
+  useEffect(
+    () => () => {
+      maps?.normal.dispose();
+      maps?.orm.dispose();
+    },
+    [maps],
+  );
+
+  const peel = useMemo(() => {
+    const t = orangePeel().clone();
+    // one orange-peel tile every ~5 cm of plate
+    t.repeat.set(dims.w / 5, dims.h / 5);
+    t.needsUpdate = true;
+    return t;
+  }, [dims.w, dims.h]);
+  useEffect(() => () => peel.dispose(), [peel]);
+
   const materials = useMemo(() => {
-    const edge = new THREE.MeshStandardMaterial({ color: "#c7cacf", metalness: 1, roughness: 0.32 });
-    const front = new THREE.MeshPhysicalMaterial({ color: "#ffffff", ...finishProps(finish) });
+    const edge = new THREE.MeshPhysicalMaterial({ color: "#cfd2d6", metalness: 1, roughness: 0.28, envMapIntensity: 1.1 });
+    const print = new THREE.MeshPhysicalMaterial({ color: "#2a2724", ...surfaceProps(finish) });
     const backMat = new THREE.MeshStandardMaterial({ map: back, metalness: 0.85, roughness: 0.45 });
-    return [edge, edge, edge, edge, front, backMat];
+    return { edge, print, back: backMat };
   }, [finish, back]);
+  useEffect(() => () => Object.values(materials).forEach((m) => m.dispose()), [materials]);
 
-  // keep the texture in sync without recreating materials
+  // attach textures once they exist (three.js must recompile the shader when a map appears)
   useEffect(() => {
-    const front = materials[4] as THREE.MeshPhysicalMaterial;
-    front.map = tex;
-    front.color.set(tex ? "#ffffff" : "#2a2724");
-    front.needsUpdate = true;
-  }, [materials, tex]);
+    const p = materials.print;
+    p.map = tex;
+    p.normalMap = maps?.normal ?? null;
+    p.roughnessMap = maps?.orm ?? null;
+    p.metalnessMap = maps?.orm ?? null;
+    p.clearcoatNormalMap = finish === "brillant" ? peel : null;
+    if (!maps) {
+      p.roughness = 0.7;
+      p.metalness = 0.05;
+    } else {
+      p.roughness = 1;
+      p.metalness = 1;
+    }
+    p.color.set(tex ? "#ffffff" : "#2a2724");
+    p.needsUpdate = true;
+  }, [materials, tex, maps, peel, finish]);
 
-  const frameColor = frame === "chene" ? "#a67c4e" : frame === "noir" ? "#1d1c1b" : null;
   const fw = 0.22; // 2.2 cm moulding
   const fd = 0.24;
+  const wood = frameColor && /^#(a|b|c|d|8|9)/i.test(frameColor);
 
   return (
     <group ref={group}>
-      <mesh material={materials} castShadow>
-        <boxGeometry args={[w, h, THICK]} />
-      </mesh>
-      <mesh position={[0, 0, THICK / 2 + 0.0008]} material={glint} renderOrder={2}>
-        <planeGeometry args={[w, h]} />
-      </mesh>
+      <mesh geometry={geo.body} material={materials.edge} castShadow />
+      <mesh geometry={geo.face} material={materials.print} position={[0, 0, THICK / 2 + BEVEL + 0.0002]} />
+      <mesh geometry={geo.face} material={materials.back} position={[0, 0, -THICK / 2 - BEVEL - 0.0002]} rotation={[0, Math.PI, 0]} />
+      <mesh geometry={geo.glint} position={[0, 0, THICK / 2 + BEVEL + 0.0012]} material={glint} renderOrder={2} />
       {/* magnet on the back */}
-      <mesh position={[0, 0, -THICK / 2 - 0.012]} rotation={[Math.PI / 2, 0, 0]}>
+      <mesh position={[0, 0, -THICK / 2 - 0.013]} rotation={[Math.PI / 2, 0, 0]}>
         <cylinderGeometry args={[0.14, 0.14, 0.022, 40]} />
         <meshStandardMaterial color="#6f7378" metalness={1} roughness={0.25} />
       </mesh>
@@ -86,11 +184,7 @@ function Plate({ image, dims, finish = "mat", frame = "aucun" }: PlateViewerProp
           ].map((b, i) => (
             <mesh key={i} position={b.p as [number, number, number]} castShadow>
               <boxGeometry args={b.s as [number, number, number]} />
-              <meshStandardMaterial
-                color={frameColor}
-                roughness={frame === "chene" ? 0.7 : 0.5}
-                metalness={0}
-              />
+              <meshStandardMaterial color={frameColor} roughness={wood ? 0.7 : 0.5} metalness={0} />
             </mesh>
           ))}
         </group>
@@ -112,10 +206,10 @@ export default function PlateViewer3D(props: PlateViewerProps) {
       gl={{ antialias: true, toneMapping: THREE.NeutralToneMapping, toneMappingExposure: 1 }}
       shadows
     >
-      <StudioEnvironment intensity={props.finish === "mat" ? 0.6 : 0.7} />
-      
+      <StudioEnvironment intensity={props.finish === "mat" || !props.finish ? 0.6 : 0.7} />
       <directionalLight position={[2.5, 3, 4]} intensity={0.9} castShadow />
-      <directionalLight position={[-3, 1, 2]} intensity={0.2} color="#ffd9b8" />
+      {/* low raking light: makes the ink relief and the edge readable */}
+      <directionalLight position={[-3.5, 0.6, 1.2]} intensity={0.28} color="#ffd9b8" />
       <Plate {...props} />
       <ContactShadows
         position={[0, -h / 2 - 0.45, 0]}
@@ -131,7 +225,7 @@ export default function PlateViewer3D(props: PlateViewerProps) {
         enablePan={false}
         enableDamping
         dampingFactor={0.08}
-        minDistance={dist * 0.45}
+        minDistance={dist * 0.3}
         maxDistance={dist * 1.6}
         minPolarAngle={Math.PI * 0.22}
         maxPolarAngle={Math.PI * 0.68}

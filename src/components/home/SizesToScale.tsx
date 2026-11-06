@@ -1,9 +1,9 @@
 import Image from "next/image";
 import type { Artwork } from "@/lib/catalog";
-import { SIZES, formatDH } from "@/lib/pricing";
+import { formatDH, type PlateSize } from "@/lib/pricing";
 
-/** The four formats drawn to the same scale, next to a 1 m ruler. */
-export function SizesToScale({ art }: { art: Artwork }) {
+/** The formats drawn to the same scale, next to a 1 m ruler. */
+export function SizesToScale({ art, sizes: SIZES }: { art: Artwork; sizes: PlateSize[] }) {
   return (
     <div className="relative">
       <div className="flex items-end gap-[3.5%] border-b border-ink/25 pb-0">

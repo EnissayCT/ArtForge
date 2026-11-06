@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, Banknote, ChevronDown, Lock } from "lucide-react";
-import { useCart, cartTotals, unitPrice } from "@/lib/cart";
-import { BUNDLE, PROMOS, formatDH, SHIPPING } from "@/lib/pricing";
+import { useCart } from "@/lib/cart";
+import { formatDH } from "@/lib/pricing";
+import { useShop } from "@/components/providers/ShopProvider";
+import { track, visitSource } from "@/lib/track";
 import { CITIES, FAST_CITIES } from "@/lib/site";
 import { loadDesign } from "@/lib/uploads";
 import { useHydrated } from "@/lib/hooks";
@@ -43,25 +45,48 @@ export function Checkout() {
   const [form, setForm] = useState<Form>(EMPTY);
   const [touched, setTouched] = useState(false);
   const [promoInput, setPromoInput] = useState("");
-  const [promo, setPromo] = useState("");
+  const [promo, setPromo] = useState<{ code: string; percent: number } | null>(null);
   const [promoMsg, setPromoMsg] = useState<string | null>(null);
+  const [checking, setChecking] = useState(false);
+  const shop = useShop();
+  const tracked = useRef(false);
   const [step, setStep] = useState<"idle" | "uploading" | "sending">("idle");
   const [error, setError] = useState<string | null>(null);
 
   const list = hydrated ? items : [];
-  const t = cartTotals(list, promo);
+  const t = shop.totals(list, promo?.percent ?? 0);
+
+  useEffect(() => {
+    if (!hydrated || tracked.current || items.length === 0) return;
+    tracked.current = true;
+    track("checkout", { value: shop.totals(items).total });
+  }, [hydrated, items, shop]);
   const errors = validate(form);
   const set = (k: keyof Form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));
 
-  function applyPromo() {
+  async function applyPromo() {
     const code = promoInput.trim().toUpperCase();
-    if (PROMOS[code]) {
-      setPromo(code);
-      setPromoMsg(`Code ${code} appliqué : −${PROMOS[code]} %`);
-    } else {
-      setPromo("");
-      setPromoMsg("Ce code n'existe pas ou a expiré.");
+    if (!code) return;
+    setChecking(true);
+    try {
+      const res = await fetch("/api/promo", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ code }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setPromo({ code: data.code, percent: data.percent });
+        setPromoMsg(`Code ${data.code} appliqué : −${data.percent} %`);
+      } else {
+        setPromo(null);
+        setPromoMsg(data.error || "Ce code n'existe pas ou a expiré.");
+      }
+    } catch {
+      setPromoMsg("Vérification impossible, réessayez.");
+    } finally {
+      setChecking(false);
     }
   }
 
@@ -94,7 +119,8 @@ export function Checkout() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           customer: { ...form, otherCity: form.city === "Autre ville" ? form.otherCity : undefined },
-          promo: promo || undefined,
+          promo: promo?.code,
+          source: visitSource(),
           items: list.map((i) =>
             i.kind === "plate"
               ? { kind: "plate", artSlug: i.artSlug, designId: designIds[i.key], title: i.title, size: i.size, finish: i.finish, frame: i.frame, landscape: i.landscape, qty: i.qty }
@@ -139,8 +165,8 @@ export function Checkout() {
       <h1 className="display mt-5 text-[56px] sm:text-[80px]">Commande</h1>
 
       <form onSubmit={submit} noValidate className="mt-10 grid gap-12 lg:grid-cols-12">
-        <div className="space-y-10 lg:col-span-7">
-          <fieldset>
+        <div className="min-w-0 space-y-10 lg:col-span-7">
+          <fieldset className="min-w-0">
             <legend className="label mb-5 text-stone">01 — Vos coordonnées</legend>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Nom complet" error={err("name")}>
@@ -155,7 +181,7 @@ export function Checkout() {
             </div>
           </fieldset>
 
-          <fieldset>
+          <fieldset className="min-w-0">
             <legend className="label mb-5 text-stone">02 — Livraison</legend>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Ville" error={err("city")}>
@@ -191,7 +217,7 @@ export function Checkout() {
             )}
           </fieldset>
 
-          <fieldset>
+          <fieldset className="min-w-0">
             <legend className="label mb-5 text-stone">03 — Paiement</legend>
             <div className="flex items-start gap-4 border-2 border-ink p-5">
               <Banknote className="mt-0.5 size-6 shrink-0" strokeWidth={1.5} />
@@ -206,7 +232,7 @@ export function Checkout() {
           </fieldset>
         </div>
 
-        <aside className="lg:col-span-5">
+        <aside className="min-w-0 lg:col-span-5">
           <div className="bg-paper-2 p-6 lg:sticky lg:top-24">
             <p className="display text-[30px]">Récapitulatif</p>
             <ul className="mt-4 divide-y divide-ink/10">
@@ -220,7 +246,7 @@ export function Checkout() {
                     </p>
                     <p className="truncate text-[12px] text-stone">{i.subtitle}</p>
                   </div>
-                  <p className="text-[14px] tabular-nums">{formatDH(unitPrice(i) * i.qty)}</p>
+                  <p className="text-[14px] tabular-nums">{formatDH(shop.unitPrice(i) * i.qty)}</p>
                 </li>
               ))}
             </ul>
@@ -229,12 +255,23 @@ export function Checkout() {
               <input
                 value={promoInput}
                 onChange={(e) => setPromoInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    applyPromo();
+                  }
+                }}
                 placeholder="Code promo"
-                className="field py-2.5 uppercase"
+                className="field min-w-0 py-2.5 uppercase"
                 aria-label="Code promo"
               />
-              <button type="button" onClick={applyPromo} className="shrink-0 border border-ink px-4 text-[13px] font-semibold uppercase">
-                Appliquer
+              <button
+                type="button"
+                onClick={applyPromo}
+                disabled={checking}
+                className="shrink-0 border border-ink px-4 text-[13px] font-semibold uppercase disabled:opacity-50"
+              >
+                {checking ? "…" : "Appliquer"}
               </button>
             </div>
             {promoMsg && <p className={cn("mt-2 text-[12.5px]", promo ? "text-ok" : "text-ember-deep")}>{promoMsg}</p>}
@@ -246,13 +283,13 @@ export function Checkout() {
               </div>
               {t.discount > 0 && (
                 <div className="flex justify-between text-ember-deep">
-                  <dt>Pack {BUNDLE.minPlates} plaques (−{BUNDLE.percent} %)</dt>
+                  <dt>Pack {shop.bundle.minPlates} plaques (−{shop.bundle.percent} %)</dt>
                   <dd className="tabular-nums">−{formatDH(t.discount)}</dd>
                 </div>
               )}
               {t.promo > 0 && (
                 <div className="flex justify-between text-ember-deep">
-                  <dt>Code {promo}</dt>
+                  <dt>Code {promo?.code}</dt>
                   <dd className="tabular-nums">−{formatDH(t.promo)}</dd>
                 </div>
               )}
@@ -261,7 +298,7 @@ export function Checkout() {
                 <dd className="tabular-nums">{t.shipping === 0 ? "Offerte" : formatDH(t.shipping)}</dd>
               </div>
               {t.shipping > 0 && (
-                <p className="text-[12px] text-stone">Offerte dès {formatDH(SHIPPING.freeAbove)} — plus que {formatDH(t.toFreeShipping)}.</p>
+                <p className="text-[12px] text-stone">Offerte dès {formatDH(shop.shipping.freeAbove)} — plus que {formatDH(t.toFreeShipping)}.</p>
               )}
               <div className="flex justify-between border-t border-ink/10 pt-3 text-[19px] font-semibold">
                 <dt>À payer à la livraison</dt>

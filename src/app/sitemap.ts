@@ -1,8 +1,9 @@
 import type { MetadataRoute } from "next";
-import { ARTWORKS, COLLECTIONS } from "@/lib/catalog";
+import { getCatalog } from "@/lib/data";
 import { SITE } from "@/lib/site";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const { artworks: ARTWORKS, collections: COLLECTIONS } = await getCatalog();
   const base = SITE.url.replace(/\/$/, "");
   const pages = ["", "/boutique", "/collections", "/coques", "/creer", "/atelier", "/aide"];
   return [

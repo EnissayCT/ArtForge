@@ -5,7 +5,7 @@ import { Canvas } from "@react-three/fiber";
 import { ContactShadows, OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 import type { PhoneModel } from "@/lib/phones";
-import type { CaseTypeId } from "@/lib/pricing";
+import type { CaseStyle } from "@/lib/pricing";
 import {
   StudioEnvironment,
   planarShapeGeometry,
@@ -18,7 +18,7 @@ import {
 export interface PhoneViewerProps {
   image: string;
   phone: PhoneModel;
-  caseType?: CaseTypeId;
+  caseType?: CaseStyle;
 }
 
 const U = 0.1; // 1 unit = 1 cm, measurements are in mm

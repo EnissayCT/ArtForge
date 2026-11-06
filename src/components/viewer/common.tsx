@@ -196,8 +196,8 @@ export function planarShapeGeometry(shape: THREE.Shape, segments = 24) {
   return geo;
 }
 
-/** Brushed-steel back with the ArtForge stamp. */
-export function useBackTexture(label: string) {
+/** Brushed-steel back with the brand stamp. */
+export function useBackTexture(label: string, brand = "ArtForge") {
   return useMemo(() => {
     const c = document.createElement("canvas");
     c.width = 512;
@@ -213,12 +213,12 @@ export function useBackTexture(label: string) {
     g.fillStyle = "rgba(30,30,32,0.55)";
     g.textAlign = "center";
     g.font = "800 44px Archivo, Arial Narrow, sans-serif";
-    g.fillText("ARTFORGE", 256, 150);
+    g.fillText(brand.toUpperCase(), 256, 150);
     g.font = "500 18px monospace";
     g.fillText(label, 256, 186);
     g.fillText("IMPRIMÉ AU MAROC", 256, 400);
     const t = new THREE.CanvasTexture(c);
     t.colorSpace = THREE.SRGBColorSpace;
     return t;
-  }, [label]);
+  }, [label, brand]);
 }

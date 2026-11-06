@@ -1,0 +1,29 @@
+{
+  "fps": 30,
+  "bpm": 120,
+  "adA": {
+    "hookSnap": 30,
+    "steel": 90,
+    "mechSnap": 120,
+    "galleryLands": [150, 165, 180, 195, 210, 225],
+    "sizes": 240,
+    "sizeLands": [244, 248, 252, 256],
+    "finishes": 285,
+    "offer": 330,
+    "end": 390
+  },
+  "adB": {
+    "hookLand": 30,
+    "hero": 30,
+    "steps": 75,
+    "tap": 84,
+    "upload": 90,
+    "crop": 105,
+    "preview": 135,
+    "room": 165,
+    "roomSnap": 180,
+    "case": 240,
+    "offer": 300,
+    "end": 375
+  }
+}

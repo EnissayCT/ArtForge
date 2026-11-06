@@ -16,22 +16,9 @@ import {
   Undo2,
   Upload,
 } from "lucide-react";
-import { featured } from "@/lib/catalog";
-import {
-  DEFAULT_SIZE,
-  casePrice,
-  formatDH,
-  getCaseType,
-  getFinish,
-  getFrame,
-  getSize,
-  platePrice,
-  type CaseTypeId,
-  type FinishId,
-  type FrameId,
-  type SizeId,
-} from "@/lib/pricing";
-import { DEFAULT_PHONE, getPhone } from "@/lib/phones";
+import { NO_FRAME, formatDH, type CaseTypeId, type FinishId, type FrameId, type SizeId } from "@/lib/pricing";
+import { useCatalog, useShop } from "@/components/providers/ShopProvider";
+import { track } from "@/lib/track";
 import { useCart } from "@/lib/cart";
 import { canvasToBlob, newId, saveDesign } from "@/lib/uploads";
 import { cn } from "@/lib/utils";
@@ -88,13 +75,15 @@ function loadImage(url: string) {
 }
 
 export function Studio({ initialKind = "plate" }: { initialKind?: "plate" | "case" }) {
+  const shop = useShop();
+  const catalog = useCatalog();
   const [kind, setKind] = useState<"plate" | "case">(initialKind);
   const [orientation, setOrientation] = useState<"portrait" | "paysage">("portrait");
-  const [size, setSize] = useState<SizeId>(DEFAULT_SIZE);
-  const [finish, setFinish] = useState<FinishId>("mat");
-  const [frame, setFrame] = useState<FrameId>("aucun");
-  const [phoneId, setPhoneId] = useState(DEFAULT_PHONE);
-  const [caseType, setCaseType] = useState<CaseTypeId>("slim");
+  const [size, setSize] = useState<SizeId>(shop.defaultSize);
+  const [finish, setFinish] = useState<FinishId>(shop.defaultFinish);
+  const [frame, setFrame] = useState<FrameId>(NO_FRAME);
+  const [phoneId, setPhoneId] = useState(shop.defaultPhone);
+  const [caseType, setCaseType] = useState<CaseTypeId>(shop.defaultCaseType);
   const [qty, setQty] = useState(1);
   const [view, setView] = useState<View>("cadrage");
   const [image, setImage] = useState<Loaded | null>(null);
@@ -107,12 +96,15 @@ export function Studio({ initialKind = "plate" }: { initialKind?: "plate" | "cas
   const fileInput = useRef<HTMLInputElement>(null);
   const add = useCart((s) => s.add);
 
-  const phone = getPhone(phoneId);
-  const s = getSize(size);
+  const phone = shop.phone(phoneId);
+  const s = shop.size(size);
   const landscape = orientation === "paysage";
   const dims = kind === "plate" ? (landscape ? { w: s.h, h: s.w } : { w: s.w, h: s.h }) : { w: phone.w / 10, h: phone.h / 10 };
   const aspect = dims.w / dims.h;
-  const price = kind === "plate" ? platePrice(size, finish, frame) : casePrice(caseType);
+  const price = kind === "plate" ? shop.platePrice(size, finish, frame) : shop.casePrice(caseType);
+  const look = shop.finish(finish)?.look ?? "mat";
+  const caseStyle = shop.caseType(caseType)?.style ?? "slim";
+  const frameColor = frame !== NO_FRAME ? shop.frame(frame)?.color : undefined;
 
   // keep the pan valid when the frame shape changes
   const crop = useMemo(() => (image ? clampPan(image.natural, rawCrop, aspect) : rawCrop), [image, rawCrop, aspect]);
@@ -235,7 +227,7 @@ export function Studio({ initialKind = "plate" }: { initialKind?: "plate" | "cas
             kind: "plate",
             customId: id,
             title: "Création personnalisée",
-            subtitle: `Plaque ${size} · ${dims.w}×${dims.h} cm · ${getFinish(finish).label}${frame !== "aucun" ? ` · ${getFrame(frame).label}` : ""}`,
+            subtitle: `Plaque ${s.label} · ${dims.w}×${dims.h} cm · ${shop.finish(finish)?.label ?? ""}${frame !== NO_FRAME ? ` · ${shop.frame(frame)?.label ?? ""}` : ""}`,
             thumb,
             landscape,
             size,
@@ -250,7 +242,7 @@ export function Studio({ initialKind = "plate" }: { initialKind?: "plate" | "cas
             kind: "case",
             customId: id,
             title: "Coque personnalisée",
-            subtitle: `${getCaseType(caseType).label} · ${phone.name}`,
+            subtitle: `${shop.caseType(caseType)?.label ?? ""} · ${phone.name}`,
             thumb,
             phone: phone.id,
             caseType,
@@ -258,6 +250,7 @@ export function Studio({ initialKind = "plate" }: { initialKind?: "plate" | "cas
           qty,
         );
       }
+      track("add", { value: price * qty });
       setAdded(true);
       setTimeout(() => setAdded(false), 2400);
     } catch {
@@ -267,7 +260,7 @@ export function Studio({ initialKind = "plate" }: { initialKind?: "plate" | "cas
     }
   }
 
-  const samples = featured(6);
+  const samples = catalog.featured(6);
   const setRot = () => setCrop((c) => clampPan(image!.natural, { ...c, rot: (((c.rot + 90) % 360) as Rotation) }, aspect));
 
   return (
@@ -360,15 +353,15 @@ export function Studio({ initialKind = "plate" }: { initialKind?: "plate" | "cas
             {image && view === "3d" && preview && (
               <div className="absolute inset-0">
                 {kind === "plate" ? (
-                  <PlateViewer image={preview} dims={dims} finish={finish} frame={frame} />
+                  <PlateViewer image={preview} dims={dims} finish={look} frameColor={frameColor} />
                 ) : (
-                  <PhoneViewer image={preview} phone={phone} caseType={caseType} />
+                  <PhoneViewer image={preview} phone={phone} caseType={caseStyle} />
                 )}
               </div>
             )}
 
             {image && view === "mur" && preview && (
-              <RoomPreview image={preview} dims={dims} frame={frame} finish={finish} />
+              <RoomPreview image={preview} dims={dims} frameColor={frameColor} finish={look} />
             )}
           </div>
 

@@ -20,3 +20,7 @@ Trimmed and transcoded to H.264 High, 1280x720, CRF 26, no audio, +faststart. Th
 | `craft.mp4` / `craft.jpg` | https://mixkit.co/free-stock-video/hand-of-an-artist-with-a-brush-when-painting-5197/ | 0.2 to 10.0 s | Mixkit Stock Video Free License |
 | `lifestyle.mp4` / `lifestyle.jpg` | https://mixkit.co/free-stock-video/coffee-break-in-a-creative-studio-14622/ | 0.0 to 9.0 s | Mixkit Stock Video Free License |
 | `texture.mp4` / `texture.jpg` | https://mixkit.co/free-stock-video/exploding-ink-underwater-105/ | 2.0 to 12.0 s | Mixkit Stock Video Free License |
+
+## Vidéos produit maison
+
+- `public/videos/plate-glint.mp4` et `plate-snap.mp4` : rendus originaux (Remotion, dossier `ads/`), à partir des œuvres du catalogue et de la photo de salon. Aucune licence tierce.

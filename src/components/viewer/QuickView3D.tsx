@@ -6,7 +6,8 @@ import { create } from "zustand";
 import { ArrowRight, Rotate3d, X } from "lucide-react";
 import type { Artwork } from "@/lib/catalog";
 import { isLandscape } from "@/lib/catalog";
-import { DEFAULT_SIZE, formatDH, getSize, plateDims } from "@/lib/pricing";
+import { formatDH } from "@/lib/pricing";
+import { useShop } from "@/components/providers/ShopProvider";
 import { useEscape, useLockBody } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
 import { PlateViewer } from "./lazy";
@@ -21,6 +22,8 @@ export function QuickView3D() {
   const art = useQuickView((s) => s.art);
   const hide = useQuickView((s) => s.hide);
   const close = useCallback(() => hide(), [hide]);
+  const shop = useShop();
+  const def = shop.size(shop.defaultSize);
   useLockBody(!!art);
   useEscape(close, !!art);
 
@@ -31,7 +34,7 @@ export function QuickView3D() {
         <div className="absolute inset-3 flex animate-fade-up flex-col overflow-hidden bg-ink text-paper sm:inset-8 lg:inset-x-[8vw] lg:inset-y-10">
           <div className="flex items-center justify-between border-b border-paper/10 px-5 py-4">
             <div className="min-w-0">
-              <p className="label text-paper/50">Vue 3D · {getSize(DEFAULT_SIZE).w} × {getSize(DEFAULT_SIZE).h} cm · Brillant</p>
+              <p className="label text-paper/50">Vue 3D · {def.w} × {def.h} cm · Brillant</p>
               <p className="display-semi truncate text-2xl">{art.title}</p>
             </div>
             <button onClick={close} className="p-2" aria-label="Fermer">
@@ -39,14 +42,14 @@ export function QuickView3D() {
             </button>
           </div>
           <div className="relative flex-1 bg-[radial-gradient(ellipse_at_50%_40%,#2f2b27_0%,#131211_70%)]">
-            <PlateViewer image={art.image} dims={plateDims(DEFAULT_SIZE, isLandscape(art))} finish="brillant" />
+            <PlateViewer image={art.image} dims={shop.plateDims(shop.defaultSize, isLandscape(art))} finish="brillant" />
             <p className="label pointer-events-none absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-2 text-paper/50">
               <Rotate3d className="size-4" /> Faites pivoter · molette pour zoomer
             </p>
           </div>
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-paper/10 px-5 py-4">
             <p className="text-[14px] text-paper/70">
-              {art.artist} · dès <strong className="text-paper">{formatDH(getSize("S").price)}</strong>
+              {art.artist} · dès <strong className="text-paper">{formatDH(shop.fromPrice)}</strong>
             </p>
             <Link
               href={`/oeuvre/${art.slug}`}

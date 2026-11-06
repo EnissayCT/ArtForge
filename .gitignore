@@ -43,3 +43,6 @@ next-env.d.ts
 
 # local order / lead / upload store
 /data
+
+# admin credentials generated locally (never commit)
+/.secrets
