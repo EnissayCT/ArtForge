@@ -103,10 +103,10 @@ export const WHATSAPP_PLACEHOLDER = "212600000000";
 
 export const DEFAULT_SETTINGS: StoreSettings = {
   brand: {
-    name: "ArtForge",
+    name: "Darart",
     tagline: "Affiches en métal imprimées au Maroc",
-    email: "bonjour@artforge.ma",
-    instagram: "https://instagram.com/artforge.ma",
+    email: "bonjour@darart.ma",
+    instagram: "https://instagram.com/darart.ma",
     whatsapp: process.env.NEXT_PUBLIC_WHATSAPP || WHATSAPP_PLACEHOLDER,
     city: "Casablanca",
   },
@@ -172,7 +172,7 @@ export const DEFAULT_SETTINGS: StoreSettings = {
   shipping: { price: 35, freeAbove: 500, fast: [1, 2], others: [2, 4] },
   phonesDisabled: [],
   pixelId: "",
-  promos: [{ code: "FORGE10", percent: 10, active: true }],
+  promos: [{ code: "DARART10", percent: 10, active: true }, { code: "FORGE10", percent: 10, active: true }],
   templates: {
     confirm:
       "Bonjour {prenom} 👋\nIci {marque}. Merci pour votre commande {numero} :\n{articles}\n\nTotal à payer à la livraison : {total}.\nPouvez-vous nous confirmer votre adresse à {ville} ? Merci !",

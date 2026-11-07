@@ -30,7 +30,7 @@ export function NewsletterForm({ tone = "ink", source = "footer" }: { tone?: "in
         <span className="grid size-7 place-items-center rounded-full bg-ember text-white">
           <Check className="size-4" />
         </span>
-        Bienvenue au club. Votre code −10 % : <strong className="label text-[13px]">FORGE10</strong>
+        Bienvenue au club. Votre code −10 % : <strong className="label text-[13px]">DARART10</strong>
       </p>
     );
   }

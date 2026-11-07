@@ -57,7 +57,7 @@ export async function changePasswordAction(_prev: ActionState, fd: FormData): Pr
 
 /* ---------------------------------------------------------------- orders */
 
-const OrderNumber = z.string().regex(/^AF-[A-Z0-9]{6}$/);
+const OrderNumber = z.string().regex(/^(AF|DA)-[A-Z0-9]{6}$/);
 const Status = z.enum(ORDER_STATUSES.map((s) => s.id) as [OrderStatus, ...OrderStatus[]]);
 
 async function updateOrder(number: string, fn: (o: Order) => Order) {

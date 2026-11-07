@@ -23,7 +23,7 @@ npm install          # Node 22; Remotion downloads its own headless Chrome on fi
 npm run render -- --brand "Nouveau Nom"
 ```
 
-This regenerates both ads with the new name on the logo lockups, the app header in Ad B and the end cards. It also redoes the loops, posters and contact sheets. The default is `ArtForge`. Options:
+This regenerates both ads with the new name on the logo lockups, the app header in Ad B and the end cards. It also redoes the loops, posters and contact sheets. The default is `Darart`. Options:
 
 - `--only a` / `--only b` / `--only loops` (comma-separated) renders a subset.
 - `--audio` forces a rebuild of the soundtracks.
@@ -36,7 +36,7 @@ Other commands:
 npm run studio       # live preview / scrubbing in the browser (Remotion Studio)
 npm run audio        # rebuild public/audio/ad-a.wav + ad-b.wav (≈3 s, deterministic)
 npm run typecheck
-npx remotion still AdMurVide out/stills/check.png --frame=0 --gl=swangle --props='{"brand":"ArtForge","safe":true}'   # frame with the Reels safe-zone overlay
+npx remotion still AdMurVide out/stills/check.png --frame=0 --gl=swangle --props='{"brand":"Darart","safe":true}'   # frame with the Reels safe-zone overlay
 ```
 
 ### Swapping the "customer photo" in Ad B

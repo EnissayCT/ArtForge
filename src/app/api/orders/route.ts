@@ -48,7 +48,7 @@ const OrderInput = z.object({
 
 function orderNumber() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let s = "AF-";
+  let s = "DA-";
   for (let i = 0; i < 6; i++) s += chars[randomInt(chars.length)];
   return s;
 }

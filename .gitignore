@@ -46,3 +46,7 @@ next-env.d.ts
 
 # admin credentials generated locally (never commit)
 /.secrets
+
+# generated Instagram images (large, kept local)
+/output
+/brand-kit/IG Posts

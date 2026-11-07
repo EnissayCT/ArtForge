@@ -5,7 +5,7 @@
 set -euo pipefail
 
 HOST="${DEPLOY_HOST:-dayfolio-vps}"
-URL="${APP_URL:-https://artforge.54-38-241-221.sslip.io}"
+URL="${APP_URL:-https://darart.54-38-241-221.sslip.io}"
 STAMP="$(date +%Y%m%d-%H%M%S)"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 WORK="$(mktemp -d)"
@@ -22,7 +22,9 @@ NEXT_PUBLIC_APP_URL="$URL" npx next build >/dev/null
 echo "→ assemble release $STAMP"
 REL="$WORK/release"
 mkdir -p "$REL/.next"
-cp -r .next/standalone/. "$REL/"
+# only the server runtime: never other folders of the project (ads, Instagram exports, brand kit…)
+cp -r .next/standalone/server.js .next/standalone/package.json .next/standalone/node_modules "$REL/"
+cp -r .next/standalone/.next/. "$REL/.next/"
 cp -r .next/static "$REL/.next/static"
 cp -r public "$REL/public"
 # sharp (image optimisation) for Linux x64

@@ -2,7 +2,7 @@ import { useId } from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * The ArtForge mark: a metal plate with a chamfered corner, crossed by the
+ * The Darart mark: a metal plate with a chamfered corner, crossed by the
  * double glint of light that runs over polished metal.
  */
 export function Mark({ className, animated = false }: { className?: string; animated?: boolean }) {
@@ -26,7 +26,7 @@ export function Mark({ className, animated = false }: { className?: string; anim
 export function Logo({
   className,
   markClassName,
-  name = "ArtForge",
+  name = "Darart",
 }: {
   className?: string;
   markClassName?: string;

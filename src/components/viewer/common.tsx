@@ -197,7 +197,7 @@ export function planarShapeGeometry(shape: THREE.Shape, segments = 24) {
 }
 
 /** Brushed-steel back with the brand stamp. */
-export function useBackTexture(label: string, brand = "ArtForge") {
+export function useBackTexture(label: string, brand = "Darart") {
   return useMemo(() => {
     const c = document.createElement("canvas");
     c.width = 512;

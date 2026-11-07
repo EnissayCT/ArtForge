@@ -14,7 +14,7 @@ export const Root: React.FC = () => {
         height={1920}
         fps={30}
         durationInFrames={450}
-        defaultProps={{ brand: "ArtForge", safe: false }}
+        defaultProps={{ brand: "Darart", safe: false }}
       />
       <Composition
         id="AdTaPhoto"
@@ -23,7 +23,7 @@ export const Root: React.FC = () => {
         height={1920}
         fps={30}
         durationInFrames={450}
-        defaultProps={{ brand: "ArtForge", photo: "scenes/cafe.jpg", photoPosition: "62% 50%", safe: false }}
+        defaultProps={{ brand: "Darart", photo: "scenes/cafe.jpg", photoPosition: "62% 50%", safe: false }}
       />
       {/* Silent product loops for the website, 4:5 */}
       <Composition id="SiteLoopGlint" component={LoopGlint} width={1080} height={1350} fps={30} durationInFrames={240} defaultProps={{ art: "art/zellige-fes.jpg" }} />

@@ -1,5 +1,5 @@
 [Unit]
-Description=ArtForge — boutique d'affiches en métal (Next.js)
+Description=Darart — boutique d'affiches en métal (Next.js)
 After=network-online.target
 Wants=network-online.target
 StartLimitIntervalSec=300

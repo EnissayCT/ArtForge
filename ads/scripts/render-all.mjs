@@ -1,6 +1,6 @@
 // One command to (re)render every deliverable:
 //
-//   npm run render                         # brand "ArtForge"
+//   npm run render                         # brand "Darart"
 //   npm run render -- --brand "Nouveau Nom" # same ads, new name on logo/end cards
 //   npm run render -- --only a             # a | b | loops (comma-separated)
 //
@@ -24,7 +24,7 @@ const arg = (name, def) => {
   const eq = argv.find((a) => a.startsWith(`--${name}=`));
   return eq ? eq.slice(name.length + 3) : def;
 };
-const brand = arg("brand", "ArtForge");
+const brand = arg("brand", "Darart");
 const only = new Set(arg("only", "a,b,loops").split(","));
 const GL = ["--gl=swangle", "--concurrency=2", "--log=warn"];
 

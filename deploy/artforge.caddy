@@ -1,9 +1,9 @@
-# /etc/caddy/sites/artforge.caddy — ArtForge storefront.
+# /etc/caddy/sites/artforge.caddy — Darart storefront (internal names stay "artforge").
 # Next.js on 127.0.0.1:3004 (unit artforge.service, files in /srv/artforge, data in /srv/artforge/data).
 # When the real domain is ready: add it next to the sslip host below, point its DNS A record at
 # this server, `caddy validate --config /etc/caddy/Caddyfile` then `systemctl reload caddy`.
 
-artforge.54-38-241-221.sslip.io {
+darart.54-38-241-221.sslip.io {
 	import app_common
 
 	header Strict-Transport-Security "max-age=31536000"
@@ -29,4 +29,9 @@ artforge.54-38-241-221.sslip.io {
 		}
 		format json
 	}
+}
+
+# old address from before the rename: keep links shared earlier working
+artforge.54-38-241-221.sslip.io {
+	redir https://darart.54-38-241-221.sslip.io{uri} permanent
 }

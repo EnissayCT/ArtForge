@@ -1330,7 +1330,7 @@
   {
     "slug": "zellige-fes",
     "title": "Zellige de Fès",
-    "artist": "Atelier ArtForge",
+    "artist": "Atelier Darart",
     "year": "2026",
     "collection": "zellige",
     "image": "/art/zellige-fes.jpg",
@@ -1347,13 +1347,13 @@
       "étoile"
     ],
     "source": "/atelier",
-    "license": "Création originale ArtForge",
+    "license": "Création originale Darart",
     "featured": true
   },
   {
     "slug": "zellige-majorelle",
     "title": "Majorelle",
-    "artist": "Atelier ArtForge",
+    "artist": "Atelier Darart",
     "year": "2026",
     "collection": "zellige",
     "image": "/art/zellige-majorelle.jpg",
@@ -1370,12 +1370,12 @@
       "octogone"
     ],
     "source": "/atelier",
-    "license": "Création originale ArtForge"
+    "license": "Création originale Darart"
   },
   {
     "slug": "zellige-marrakech",
     "title": "Zellige de Marrakech",
-    "artist": "Atelier ArtForge",
+    "artist": "Atelier Darart",
     "year": "2026",
     "collection": "zellige",
     "image": "/art/zellige-marrakech.jpg",
@@ -1391,12 +1391,12 @@
       "étoile"
     ],
     "source": "/atelier",
-    "license": "Création originale ArtForge"
+    "license": "Création originale Darart"
   },
   {
     "slug": "zellige-chefchaouen",
     "title": "Chefchaouen",
-    "artist": "Atelier ArtForge",
+    "artist": "Atelier Darart",
     "year": "2026",
     "collection": "zellige",
     "image": "/art/zellige-chefchaouen.jpg",
@@ -1412,12 +1412,12 @@
       "étoile"
     ],
     "source": "/atelier",
-    "license": "Création originale ArtForge"
+    "license": "Création originale Darart"
   },
   {
     "slug": "zellige-tetouan",
     "title": "Tétouan",
-    "artist": "Atelier ArtForge",
+    "artist": "Atelier Darart",
     "year": "2026",
     "collection": "zellige",
     "image": "/art/zellige-tetouan.jpg",
@@ -1434,12 +1434,12 @@
       "octogone"
     ],
     "source": "/atelier",
-    "license": "Création originale ArtForge"
+    "license": "Création originale Darart"
   },
   {
     "slug": "zellige-nuit",
     "title": "Nuit saharienne",
-    "artist": "Atelier ArtForge",
+    "artist": "Atelier Darart",
     "year": "2026",
     "collection": "zellige",
     "image": "/art/zellige-nuit.jpg",
@@ -1456,6 +1456,6 @@
       "nuit"
     ],
     "source": "/atelier",
-    "license": "Création originale ArtForge"
+    "license": "Création originale Darart"
   }
 ]

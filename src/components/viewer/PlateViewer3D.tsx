@@ -73,7 +73,7 @@ function surfaceProps(look: FinishLook): THREE.MeshPhysicalMaterialParameters {
   }
 }
 
-function Plate({ image, dims, finish = "mat", frameColor, brand = "ArtForge" }: PlateViewerProps) {
+function Plate({ image, dims, finish = "mat", frameColor, brand = "Darart" }: PlateViewerProps) {
   const w = dims.w * U;
   const h = dims.h * U;
   const group = useRef<THREE.Group>(null);

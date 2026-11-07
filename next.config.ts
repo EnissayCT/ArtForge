@@ -12,6 +12,8 @@ const nextConfig: NextConfig = {
   outputFileTracingExcludes: {
     "*": [
       "ads/**",
+      "output/**",
+      "brand-kit/**",
       "data/**",
       "scripts/**",
       ".secrets/**",
